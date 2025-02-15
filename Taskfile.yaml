@@ -1,0 +1,24 @@
+version: "3"
+
+tasks:
+  build:
+    desc: "Build the Go project"
+    cmds:
+      - go build -o build/kubeit ./cmd/main.go
+
+  fmt:
+    desc: "Format Go code"
+    cmds:
+      - go fmt
+
+  run:
+    desc: "Run the KubeIt CLI with arguments"
+    cmds:
+      - build/kubeit {{.CLI_ARGS}}
+    deps:
+      - build
+
+  lint:
+    desc: "Run golangci-lint"
+    cmds:
+      - ~/go/bin/golangci-lint run
