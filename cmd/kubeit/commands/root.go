@@ -42,6 +42,7 @@ func init() {
 	// Register subcommands
 	RootCmd.AddCommand(GenerateCmd)
 	RootCmd.AddCommand(VersionCmd)
+	RootCmd.AddCommand(generateSchemaCmd)
 }
 
 func initLogger() {
