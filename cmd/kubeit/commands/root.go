@@ -43,6 +43,7 @@ func init() {
 	RootCmd.AddCommand(GenerateCmd)
 	RootCmd.AddCommand(VersionCmd)
 	RootCmd.AddCommand(generateSchemaCmd)
+	RootCmd.AddCommand(generateCliDocsCmd)
 }
 
 func initLogger() {
