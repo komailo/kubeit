@@ -1,5 +1,10 @@
 # Kubeit 🏗️🚀
 
+![Status](https://img.shields.io/badge/status-active%20development-orange)
+
+> :warning: **Kubeit is in active development!**  
+> Expect rapid changes, breaking updates, and evolving features.
+
 Kubeit is a service-team-focused tool designed to simplify Kubernetes deployment configuration. Service teams can write a minimal YAML file describing their application or infrastructure, and Kubeit automatically transforms it into fully rendered Kubernetes objects that can be seamlessly included with the deployed container.
 
 Why Choose Kubeit?

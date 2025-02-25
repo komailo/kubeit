@@ -22,3 +22,29 @@ tasks:
     desc: "Run golangci-lint"
     cmds:
       - ~/go/bin/golangci-lint run
+
+  generate:
+    deps:
+      - generate-schema
+      - generate-cli-docs
+
+  generate-schema:
+    desc: Generate the schema for Kubeit configuration
+    cmds:
+      - build/kubeit generate-schema
+    deps:
+      - build
+
+  generate-cli-docs:
+    desc: Generate the CLI documentation for Kubeit
+    cmds:
+      - build/kubeit generate-cli-docs
+    deps:
+      - build
+
+  test:
+    desc: "Run tests"
+    cmds:
+      - go test -coverprofile=coverage.out ./...
+      - go tool cover -html=coverage.out -o coverage.html
+      - go tool cover -func=coverage.out
