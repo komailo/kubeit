@@ -38,7 +38,7 @@ tasks:
   generate-cli-docs:
     desc: Generate the CLI documentation for Kubeit
     cmds:
-      - build/kubeit generate-cli-docs
+      - build/kubeit generate --output-dir ./docs cli-docs
     deps:
       - build
 
