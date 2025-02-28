@@ -24,9 +24,6 @@ Use 'kubeit generate' to convert a KubeIt configuration into
 Kubernetes manifests for deployment.`,
 }
 
-// verbosity tracks how many times the user passed -v.
-var verbosity int
-
 func init() {
 	// Global verbosity flag
 	RootCmd.PersistentFlags().CountVarP(

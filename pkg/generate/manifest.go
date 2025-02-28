@@ -1,12 +1,10 @@
 package generate
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/komailo/kubeit/internal/logger"
 	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
@@ -15,11 +13,6 @@ import (
 	"helm.sh/helm/v3/pkg/chartutil"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/registry"
-	"k8s.io/apimachinery/pkg/api/meta"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer/json"
-	"k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/kubectl/pkg/scheme"
 )
 
 func GenerateManifestFromHelm(HelmApplication helmappv1alpha1.HelmApplication, generateSetOptions *GenerateOptions) error {
@@ -178,84 +171,83 @@ func pullHelmChart(
 	return filepath.Join(destinationDir, chartFileName), nil
 }
 
-func addCommonLabelsAndAnnotationsToK8sObject(manifest string) (string, error) {
-	var processedDocuments []string
+// func addCommonLabelsAndAnnotationsToK8sObject(manifest string) (string, error) {
+// 	var processedDocuments []string
 
-	// Create a YAML decoder
-	decoder := yaml.NewYAMLToJSONDecoder(bytes.NewReader([]byte(manifest)))
+// 	// Create a YAML decoder
+// 	decoder := yaml.NewYAMLToJSONDecoder(bytes.NewReader([]byte(manifest)))
 
-	for {
-		var rawObj runtime.RawExtension
-		if err := decoder.Decode(&rawObj); err != nil {
-			if err.Error() == "EOF" {
-				break
-			}
-			log.Printf("Skipping invalid Kubernetes object: %v", err)
-			continue
-		}
-		if rawObj.Raw == nil {
-			continue
-		}
+// 	for {
+// 		var rawObj runtime.RawExtension
+// 		if err := decoder.Decode(&rawObj); err != nil {
+// 			if err.Error() == "EOF" {
+// 				break
+// 			}
+// 			log.Printf("Skipping invalid Kubernetes object: %v", err)
+// 			continue
+// 		}
+// 		if rawObj.Raw == nil {
+// 			continue
+// 		}
 
-		// Decode the raw object into a Kubernetes object
-		obj, _, err := scheme.Codecs.UniversalDeserializer().Decode(rawObj.Raw, nil, nil)
-		if err != nil {
-			log.Printf("Skipping invalid Kubernetes object: %v\n%s", err, rawObj)
-			processedDocuments = append(processedDocuments, string(rawObj.Raw))
-			continue
-		}
+// 		// Decode the raw object into a Kubernetes object
+// 		obj, _, err := scheme.Codecs.UniversalDeserializer().Decode(rawObj.Raw, nil, nil)
+// 		if err != nil {
+// 			log.Printf("Skipping invalid Kubernetes object: %v\n%s", err, rawObj)
+// 			processedDocuments = append(processedDocuments, string(rawObj.Raw))
+// 			continue
+// 		}
 
-		// Add labels to valid Kubernetes objects
-		accessor, err := meta.Accessor(obj)
-		if err != nil {
-			log.Printf("Skipping non-Kubernetes object: %v", err)
-			continue
-		}
-		commonLabels, commonAnnotations := generateCommonK8sLabelsAndAnnotationsToK8sObject()
+// 		// Add labels to valid Kubernetes objects
+// 		accessor, err := meta.Accessor(obj)
+// 		if err != nil {
+// 			log.Printf("Skipping non-Kubernetes object: %v", err)
+// 			continue
+// 		}
+// 		commonLabels, commonAnnotations := generateCommonK8sLabelsAndAnnotationsToK8sObject()
 
-		// Add the labels
-		labelsMap := accessor.GetLabels()
-		if labelsMap == nil {
-			labelsMap = make(map[string]string)
-		}
-		for key, value := range commonLabels.GenerateLabels() {
-			labelsMap[key] = value
-		}
-		accessor.SetLabels(labelsMap)
+// 		// Add the labels
+// 		labelsMap := accessor.GetLabels()
+// 		if labelsMap == nil {
+// 			labelsMap = make(map[string]string)
+// 		}
+// 		for key, value := range commonLabels.GenerateLabels() {
+// 			labelsMap[key] = value
+// 		}
+// 		accessor.SetLabels(labelsMap)
 
-		// Add the annotations
-		annotationsMap := accessor.GetAnnotations()
-		if annotationsMap == nil {
-			annotationsMap = make(map[string]string)
-		}
-		for key, value := range commonAnnotations.GenerateAnnotations() {
-			annotationsMap[key] = value
-		}
-		accessor.SetAnnotations(annotationsMap)
+// 		// Add the annotations
+// 		annotationsMap := accessor.GetAnnotations()
+// 		if annotationsMap == nil {
+// 			annotationsMap = make(map[string]string)
+// 		}
+// 		for key, value := range commonAnnotations.GenerateAnnotations() {
+// 			annotationsMap[key] = value
+// 		}
+// 		accessor.SetAnnotations(annotationsMap)
 
-		// Serialize the modified object back to YAML
-		serializer := json.NewYAMLSerializer(json.DefaultMetaFactory, scheme.Scheme, scheme.Scheme)
-		var buf bytes.Buffer
-		if err := serializer.Encode(obj, &buf); err != nil {
-			return "", fmt.Errorf("failed to encode object: %v", err)
-		}
+// 		// Serialize the modified object back to YAML
+// 		serializer := json.NewYAMLSerializer(json.DefaultMetaFactory, scheme.Scheme, scheme.Scheme)
+// 		var buf bytes.Buffer
+// 		if err := serializer.Encode(obj, &buf); err != nil {
+// 			return "", fmt.Errorf("failed to encode object: %v", err)
+// 		}
 
-		processedDocuments = append(processedDocuments, buf.String())
-	}
+// 		processedDocuments = append(processedDocuments, buf.String())
+// 	}
 
-	// Join the processed documents back into a single manifest
-	return strings.Join(processedDocuments, "---\n"), nil
-}
+// 	// Join the processed documents back into a single manifest
+// 	return strings.Join(processedDocuments, "---\n"), nil
+// }
 
-func generateCommonK8sLabelsAndAnnotationsToK8sObject() (CommonK8sLabels, CommonK8sAnnotations) {
-	var labels CommonK8sLabels
-	var annotations CommonK8sAnnotations
+// func generateCommonK8sLabelsAndAnnotationsToK8sObject() (CommonK8sLabels, CommonK8sAnnotations) {
+// 	var labels CommonK8sLabels
 
-	annotations = CommonK8sAnnotations{
-		AppName:     "kubeit",
-		AppType:     "v0.1.0",
-		GeneratedBy: "kubeit",
-	}
+// 	annotations := CommonK8sAnnotations{
+// 		AppName:     "kubeit",
+// 		AppType:     "v0.1.0",
+// 		GeneratedBy: "kubeit",
+// 	}
 
-	return labels, annotations
-}
+// 	return labels, annotations
+// }

@@ -1,7 +1,6 @@
 package apis
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -112,8 +111,9 @@ kind: ""
 }
 
 func TestLoadKubeitResourcesFromDir(t *testing.T) {
-	tempDir, err := ioutil.TempDir("", "kubeit-test")
+	tempDir, err := os.MkdirTemp("/tmp", "kubeit-test")
 	require.NoError(t, err)
+
 	defer os.RemoveAll(tempDir)
 
 	testCases := []struct {
@@ -314,7 +314,7 @@ kind: UnknownKind
 	expectedErrors := 2 // From "invalid.yaml" and "wrong.yaml"
 
 	// Create a temporary test directory
-	tempDir, err := ioutil.TempDir("", "kubeit-test")
+	tempDir, err := os.MkdirTemp("/tmp", "kubeit-test")
 	require.NoError(t, err)
 	defer os.RemoveAll(tempDir)
 

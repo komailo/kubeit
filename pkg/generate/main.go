@@ -25,12 +25,10 @@ func GenerateManifests(generateSetOptions *GenerateOptions, sourceConfigUri stri
 	if parsedSource.Scheme == "file" {
 		var errs map[string][]error
 		kubeitFileResources, errs = apis.LoadKubeitResourcesFromDir(parsedSource.Path)
-		if errs != nil {
-			for fileName, err := range errs {
-				logger.Errorf("Error loading Kubeit resource from file: %s", fileName)
-				for _, e := range err {
-					logger.Errorf("    %s", e)
-				}
+		for fileName, err := range errs {
+			logger.Errorf("Error loading Kubeit resource from file: %s", fileName)
+			for _, e := range err {
+				logger.Errorf("    %s", e)
 			}
 		}
 	}
@@ -72,7 +70,10 @@ func generateHelmTemplates(kubeitFileResources []apis.KubeitFileResource, genera
 		}
 
 		if resource, ok := kubeitFileResource.Resource.(*helmappv1alpha1.HelmApplication); ok {
-			GenerateManifestFromHelm(*resource, generateSetOptions)
+			err := GenerateManifestFromHelm(*resource, generateSetOptions)
+			if err != nil {
+				errs = append(errs, err)
+			}
 		}
 	}
 	return errs
