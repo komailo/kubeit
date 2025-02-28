@@ -10,7 +10,7 @@ import (
 
 // generateSchemaCmd is a CLI command for generating JSON schemas
 var generateSchemaCmd = &cobra.Command{
-	Use:   "generate-schema",
+	Use:   "schema",
 	Short: "Generates JSON schemas for all API versions",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		outputDir := "schemas"

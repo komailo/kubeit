@@ -1,20 +1,20 @@
 package commands
 
 import (
-	"github.com/komailo/kubeit/cmd/kubeit/commands/internal"
+	"github.com/komailo/kubeit/common"
 	"github.com/komailo/kubeit/internal/logger"
 
 	"github.com/spf13/cobra"
 )
 
 // Global options accessible by all subcommands
-var globalOpts internal.GlobalOptions
+var globalSetOpts globalOptions
 
 // RootCmd is the base command
 var RootCmd = &cobra.Command{
-	Use:   "kubeit",
+	Use:   common.KubeitCLIName,
 	Short: "CLI tool to generate and manage Kubernetes deployment configurations",
-	Long: `KubeIt is a CLI tool designed for service teams to simplify 
+	Long: `Kubeit is a CLI tool designed for service teams to simplify 
 the generation and management of Kubernetes deployment configurations. 
 
 It allows teams to define infrastructure in a minimal YAML format 
@@ -24,13 +24,10 @@ Use 'kubeit generate' to convert a KubeIt configuration into
 Kubernetes manifests for deployment.`,
 }
 
-// verbosity tracks how many times the user passed -v.
-var verbosity int
-
 func init() {
 	// Global verbosity flag
 	RootCmd.PersistentFlags().CountVarP(
-		&globalOpts.Verbosity,
+		&globalSetOpts.Verbosity,
 		"verbose",
 		"v",
 		"Increase verbosity (-v = info, -vv = debug, -vvv = trace)",
@@ -42,12 +39,10 @@ func init() {
 	// Register subcommands
 	RootCmd.AddCommand(GenerateCmd)
 	RootCmd.AddCommand(VersionCmd)
-	RootCmd.AddCommand(generateSchemaCmd)
-	RootCmd.AddCommand(generateCliDocsCmd)
 }
 
 func initLogger() {
-	logger.SetLevelFromVerbosity(verbosity)
+	logger.SetLevelFromVerbosity(globalSetOpts.Verbosity)
 }
 
 // NewRootCommand returns the root command instead of executing it
