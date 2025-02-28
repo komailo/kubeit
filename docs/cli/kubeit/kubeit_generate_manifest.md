@@ -15,9 +15,9 @@ kubeit generate manifest [source-config-uri] [flags]
 ### Options inherited from parent commands
 
 ```
-  -o, --output-dir string   Output directory where the generated artifacts will be stored. (default "/home/kkanjee/git/kubeit/.kubeit/.generated")
+  -o, --output-dir string   Output directory where the generated artifacts will be stored. (default "./.kubeit/.generated")
   -v, --verbose count       Increase verbosity (-v = info, -vv = debug, -vvv = trace)
-  -w, --work-dir string     Working directory where temporary artifacts and results will be stored. (default "/home/kkanjee/git/kubeit/.kubeit/.workdir")
+  -w, --work-dir string     Working directory where temporary artifacts and results will be stored. (default "./.kubeit/.workdir")
 ```
 
 ### SEE ALSO

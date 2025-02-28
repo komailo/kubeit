@@ -6,8 +6,8 @@ Generate artifacts
 
 ```
   -h, --help                help for generate
-  -o, --output-dir string   Output directory where the generated artifacts will be stored. (default "/home/kkanjee/git/kubeit/.kubeit/.generated")
-  -w, --work-dir string     Working directory where temporary artifacts and results will be stored. (default "/home/kkanjee/git/kubeit/.kubeit/.workdir")
+  -o, --output-dir string   Output directory where the generated artifacts will be stored. (default "./.kubeit/.generated")
+  -w, --work-dir string     Working directory where temporary artifacts and results will be stored. (default "./.kubeit/.workdir")
 ```
 
 ### Options inherited from parent commands

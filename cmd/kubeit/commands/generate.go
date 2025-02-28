@@ -2,7 +2,6 @@ package commands
 
 import (
 	"os"
-	"path/filepath"
 
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/pkg/generate"
@@ -56,17 +55,12 @@ func init() {
 	GenerateCmd.AddCommand(generateCliDocsCmd)
 	GenerateCmd.AddCommand(generateSchemaCmd)
 
-	pwd, err := os.Getwd()
-	if err != nil {
-		logger.Fatalf("Failed to get current working directory: %v", err)
-	}
-
 	// Bind the output-dir flag to generateOpts
 	GenerateCmd.PersistentFlags().StringVarP(
 		&generateSetOptions.OutputDir,
 		"output-dir",
 		"o",
-		filepath.Join(pwd, ".kubeit", ".generated"),
+		"./.kubeit/.generated",
 		"Output directory where the generated artifacts will be stored.",
 	)
 
@@ -74,7 +68,7 @@ func init() {
 		&generateSetOptions.WorkDir,
 		"work-dir",
 		"w",
-		filepath.Join(pwd, ".kubeit", ".workdir"),
+		"./.kubeit/.workdir",
 		"Working directory where temporary artifacts and results will be stored.",
 	)
 }

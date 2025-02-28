@@ -38,3 +38,7 @@ Why Choose Kubeit?
 - Expand integrations with additional deployment and orchestration tools.
 
 - Improve customization options for advanced use cases.
+
+## CLI Docs
+
+- [Kubeit CLI](./docs/cli/kubeit/kubeit.md)
