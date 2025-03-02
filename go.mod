@@ -10,7 +10,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.17.1
-	k8s.io/apimachinery v0.32.1
+	k8s.io/apimachinery v0.32.2
 )
 
 require (
