@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -20,6 +19,8 @@ import (
 )
 
 // TypeRegistry holds mappings of Kind -> APIVersion -> Struct Type
+// This registry is used to dynamically load the correct struct type based on the
+// API metadata (apiVersion and kind) extracted from the YAML data.
 var TypeRegistry = map[string]map[string]reflect.Type{
 	appv1alpha1.Kind: {
 		appv1alpha1.GroupVersion: reflect.TypeOf(&appv1alpha1.Application{}),
@@ -29,8 +30,31 @@ var TypeRegistry = map[string]map[string]reflect.Type{
 	},
 }
 
-// LoadKubeitResource dynamically loads the correct struct
-func LoadKubeitResource(data []byte) (KubeitResource, error) {
+// LoadKubeitResource dynamically loads the correct struct based on the provided single
+// YAML document.
+// It extracts the API metadata (apiVersion and kind) to determine the appropriate
+// struct type,
+// unmarshals the data into the struct, validates it, and ensures it implements the
+// KubeitResource interface.
+//
+// This function is used by LoadKubeitResources to process individual YAML documents.
+// It is safe to use LoadKubeitResources even if you have a single YAML document.
+//
+// Parameters:
+//   - data: A byte slice containing the YAML data to be processed.
+//
+// Returns:
+//   - KubeitResource: The loaded and validated KubeitResource struct.
+//   - error: An error encountered during the process, or nil if no error occurred.
+//
+// The function performs the following steps:
+//  1. Extracts the API metadata (apiVersion and kind) from the YAML data.
+//  2. Looks up the appropriate struct type based on the extracted metadata.
+//  3. Creates a new instance of the struct and unmarshals the YAML data into it.
+//  4. Validates the unmarshaled struct using the go-playground/validator library.
+//  5. Ensures the struct implements the KubeitResource interface.
+//  6. Sets the TypeMeta field of the struct using the extracted metadata.
+func loadKubeitResource(data []byte) (KubeitResource, error) {
 	var metaOnly struct {
 		APIVersion string `json:"apiVersion" yaml:"apiVersion"`
 		Kind       string `json:"kind" yaml:"kind"`
@@ -84,6 +108,22 @@ func LoadKubeitResource(data []byte) (KubeitResource, error) {
 	return res, nil
 }
 
+// LoadKubeitResources loads Kubeit resources from a byte slice containing YAML data.
+// It supports multi-document YAML files and processes each document to extract Kubeit
+// resources.
+//
+// Parameters:
+//   - data: A byte slice containing the YAML data to be processed.
+//
+// Returns:
+//   - []KubeitResource: A slice of KubeitResource structs extracted from the YAML data.
+//   - []error: A slice of errors encountered while processing the YAML data.
+//
+// The function performs the following steps:
+//  1. Decodes the YAML data into individual documents.
+//  2. Marshals each document back into YAML for processing.
+//  3. Loads each document as a Kubeit resource using the LoadKubeitResource function.
+//  4. Collects and returns any errors encountered during the process.
 func LoadKubeitResources(data []byte) ([]KubeitResource, []error) {
 	var resources []KubeitResource
 	var errors []error
@@ -101,7 +141,7 @@ func LoadKubeitResources(data []byte) ([]KubeitResource, []error) {
 
 		// Marshal the individual document back into YAML for processing
 		yamlData, _ := yaml.Marshal(rawDoc)
-		resource, err := LoadKubeitResource(yamlData)
+		resource, err := loadKubeitResource(yamlData)
 		if err != nil {
 			errors = append(errors, fmt.Errorf("failed to load resource: %w", err))
 			continue
@@ -113,7 +153,29 @@ func LoadKubeitResources(data []byte) ([]KubeitResource, []error) {
 	return resources, errors
 }
 
-// LoadKubeitResourcesFromDir loads all resources from a directory, supporting multi-document YAML files
+// LoadKubeitResourcesFromDir loads all Kubeit resources from a specified directory,
+// supporting multi-document YAML files.
+// It recursively traverses the directory tree, reading and processing YAML files to
+// extract Kubeit resources.
+//
+// Parameters:
+//   - dir: The root directory to start loading Kubeit resources from.
+//
+// Returns:
+//   - []KubeitFileResource:	A slice of KubeitFileResource structs, each containing
+//     the full file path, resource, and API metadata.
+//   - map[string][]error: 		A map where the keys are file paths and the values are
+//     slices of errors encountered while processing those files.
+//
+// The function performs the following steps:
+//  1. Recursively walks through the directory tree starting from the specified root
+//     directory.
+//  2. Skips directories at the root level that start with a dot (e.g., .generated).
+//  3. Reads and processes each YAML file to extract Kubeit resources.
+//  4. Collects and returns any errors encountered during the process.
+//
+// Partially loaded resources are returned in case of errors. Always check the errors
+// map to ensure all resources were loaded successfully.
 func LoadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]error) {
 	var resources []KubeitFileResource
 	errors := make(map[string][]error)
@@ -125,16 +187,17 @@ func LoadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]
 		}
 
 		// Skip directories at the root level that start with a dot
-		if info.IsDir() && strings.HasPrefix(info.Name(), ".") && filepath.Dir(filePath) == filepath.Clean(dir) {
-			logger.Debugf("Skiping directory to load Kubeit resources from: %s", filePath)
-			return filepath.SkipDir
-		}
-
 		if info.IsDir() {
-			return nil
+			if strings.HasPrefix(info.Name(), ".") && filepath.Dir(filePath) == filepath.Clean(dir) {
+				logger.Debugf("Skiping root directory to load Kubeit resources from: %s", filePath)
+				return filepath.SkipDir
+			} else {
+				logger.Debugf("Found directory to walk to Kubeit resources from: %s", filePath)
+				return nil
+			}
 		}
 
-		log.Printf("Loading file: %s", filePath)
+		logger.Infof("Loading file: %s", filePath)
 
 		data, err := os.ReadFile(filePath)
 		if err != nil {
@@ -165,7 +228,16 @@ func LoadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]
 	return resources, errors
 }
 
-// count the resources by kind
+// CountResources counts the number of Kubeit resources by their kind.
+// It takes a slice of KubeitFileResource structs and returns a map where the keys are
+// the kinds of resources and the values are the counts of each kind.
+//
+// Parameters:
+//   - resources: A slice of KubeitFileResource structs to be counted.
+//
+// Returns:
+//   - map[string]int: 	A map where the keys are resource kinds and the values are the
+//     counts of each kind.
 func CountResources(resources []KubeitFileResource) map[string]int {
 	counts := make(map[string]int)
 	for _, resource := range resources {
