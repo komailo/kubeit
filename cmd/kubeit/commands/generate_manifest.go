@@ -1,7 +1,8 @@
 package commands
 
 import (
-	"github.com/komailo/kubeit/internal/logger"
+	"fmt"
+
 	"github.com/komailo/kubeit/pkg/generate"
 	"github.com/spf13/cobra"
 )
@@ -15,8 +16,7 @@ var GenerateManifestCmd = &cobra.Command{
 
 		errs := generate.GenerateManifests(&generateSetOptions, sourceConfigUri)
 		if len(errs) > 0 {
-			logger.Errorf("Failed to generate manifests: %v", errs)
-			logger.Fatalf("failed to generate manifests")
+			return fmt.Errorf("Failed to generate manifests: %v", errs)
 		}
 		return nil
 	},
