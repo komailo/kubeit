@@ -14,6 +14,12 @@ import (
 )
 
 func GenerateManifests(generateSetOptions *GenerateOptions, sourceConfigUri string) ([]error, map[string][]error) {
+
+	if uriLooksIsFile, newSourceConfigUri := uriIsFile(sourceConfigUri); uriLooksIsFile {
+		logger.Debugf("URI %s is a valid file, converting to file scheme", sourceConfigUri)
+		sourceConfigUri = newSourceConfigUri
+	}
+
 	parsedSource, err := parseSourceConfigURI(sourceConfigUri)
 	if err != nil {
 		return []error{err}, nil
@@ -76,6 +82,21 @@ func generateHelmTemplates(kubeitFileResources []apis.KubeitFileResource, genera
 		}
 	}
 	return errs
+}
+
+func uriIsFile(uri string) (bool, string) {
+	_, err := os.Stat(uri)
+	if err == nil {
+		logger.Debugf("File %s found so URI does look like a file", uri)
+		absPath, err := filepath.Abs(uri)
+		if err != nil {
+			logger.Warnf("Failed to get absolute path for file %s", uri)
+			return false, ""
+		}
+		return true, fmt.Sprintf("file://%s", absPath)
+	}
+	logger.Debugf("File %s not found so URI does not look like a file", uri)
+	return false, ""
 }
 
 func GenerateCliDocs(rootCmd *cobra.Command, generateSetOptions *GenerateOptions) error {
