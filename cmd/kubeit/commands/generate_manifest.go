@@ -19,7 +19,7 @@ var GenerateManifestCmd = &cobra.Command{
 		generateErrs, loadFileErrs := generate.GenerateManifests(&generateSetOptions, sourceConfigUri)
 
 		errorMap := make(map[string][]string) // Map to store errors per file
-		if loadFileErrs != nil {
+		if len(loadFileErrs) != 0 {
 			for file, errList := range loadFileErrs {
 				for _, err := range errList {
 					errorMap[file] = append(errorMap[file], fmt.Sprintf("- %v", err))
@@ -27,7 +27,9 @@ var GenerateManifestCmd = &cobra.Command{
 			}
 		}
 		if generateErrs != nil {
-			errorMap["Generate Errors"] = append(errorMap["Generate Errors"], fmt.Sprintf("- %v", generateErrs))
+			for _, err := range generateErrs {
+				errorMap["Generate Errors"] = append(errorMap["Generate Errors"], fmt.Sprintf("- %v", err))
+			}
 		}
 
 		// If there are errors, format them nicely
