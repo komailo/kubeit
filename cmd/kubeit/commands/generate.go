@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/komailo/kubeit/internal/logger"
@@ -38,14 +39,15 @@ var GenerateCmd = &cobra.Command{
 			logger.Fatalf("Failed to create output directory: %v", err)
 		}
 	},
-	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
 		// Delete the work directory
 		workDir := generateSetOptions.WorkDir
 		if err := os.RemoveAll(workDir); err != nil {
-			logger.Errorf("Failed to delete work directory: %v", err)
+			return fmt.Errorf("Failed to delete work directory: %v", err)
 		} else {
 			logger.Debugf("Work directory deleted: %s", workDir)
 		}
+		return nil
 	},
 }
 
