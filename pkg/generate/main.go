@@ -25,7 +25,7 @@ func GenerateManifests(generateSetOptions *GenerateOptions, sourceConfigUri stri
 	if parsedSource.Scheme == "file" {
 		var loadErrs map[string][]error
 		kubeitFileResources, loadErrs = apis.LoadKubeitResourcesFromDir(parsedSource.Path)
-		if loadErrs != nil {
+		if len(loadErrs) != 0 {
 			logger.Errorf("%d files have errors while loading Kubeit resources", len(loadErrs))
 			return nil, loadErrs
 		}
