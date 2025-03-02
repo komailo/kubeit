@@ -2,7 +2,6 @@ package generate
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -28,8 +27,8 @@ func GenerateManifestFromHelm(HelmApplication helmappv1alpha1.HelmApplication, g
 	// Initialize Helm environment
 	settings := cli.New()
 	actionConfig := new(action.Configuration)
-	if err := actionConfig.Init(settings.RESTClientGetter(), "", os.Getenv("HELM_DRIVER"), log.Printf); err != nil {
-		log.Fatalf("Failed to initialize Helm action configuration: %v", err)
+	if err := actionConfig.Init(settings.RESTClientGetter(), "", os.Getenv("HELM_DRIVER"), logger.Infof); err != nil {
+		logger.Fatalf("Failed to initialize Helm action configuration: %v", err)
 	}
 
 	chartPath, error := pullHelmChart(
@@ -47,7 +46,7 @@ func GenerateManifestFromHelm(HelmApplication helmappv1alpha1.HelmApplication, g
 	}
 	chart, err := loader.Load(chartPath)
 	if err != nil {
-		log.Fatalf("Failed to load Helm chart: %v", err)
+		logger.Fatalf("Failed to load Helm chart: %v", err)
 	}
 
 	// Prepare values and render templates
@@ -67,7 +66,7 @@ func GenerateManifestFromHelm(HelmApplication helmappv1alpha1.HelmApplication, g
 	}
 	release, err := installClient.Run(chart, values)
 	if err != nil {
-		log.Fatalf("Failed to render templates: %v", err)
+		logger.Fatalf("Failed to render templates: %v", err)
 	}
 
 	// fail if manifest file is empty
@@ -78,7 +77,7 @@ func GenerateManifestFromHelm(HelmApplication helmappv1alpha1.HelmApplication, g
 	//processedManifest, err := addCommonLabelsAndAnnotationsToK8sObject(release.Manifest)
 	processedManifest := release.Manifest
 	if err != nil {
-		log.Fatalf("Failed to process manifest: %v", err)
+		logger.Fatalf("Failed to process manifest: %v", err)
 	}
 
 	// Define the file path where you want to write the manifest
@@ -87,7 +86,7 @@ func GenerateManifestFromHelm(HelmApplication helmappv1alpha1.HelmApplication, g
 	// Write the manifest content to the file
 	err = os.WriteFile(manifestFilePath, []byte(processedManifest), os.ModePerm)
 	if err != nil {
-		log.Fatalf("Failed to write manifest to file: %v", err)
+		logger.Fatalf("Failed to write manifest to file: %v", err)
 	}
 
 	return nil
@@ -104,7 +103,7 @@ func pullHelmChart(
 	pullClient := action.NewPullWithOpts(action.WithConfig(actionConfig))
 	registryClient, err := registry.NewClient()
 	if err != nil {
-		log.Fatalf("Failed to create registry client: %v", err)
+		logger.Fatalf("Failed to create registry client: %v", err)
 	}
 	pullClient.SetRegistryClient(registryClient)
 	pullClient.Settings = settings
@@ -183,7 +182,7 @@ func pullHelmChart(
 // 			if err.Error() == "EOF" {
 // 				break
 // 			}
-// 			log.Printf("Skipping invalid Kubernetes object: %v", err)
+// 			logger.Printf("Skipping invalid Kubernetes object: %v", err)
 // 			continue
 // 		}
 // 		if rawObj.Raw == nil {
@@ -193,7 +192,7 @@ func pullHelmChart(
 // 		// Decode the raw object into a Kubernetes object
 // 		obj, _, err := scheme.Codecs.UniversalDeserializer().Decode(rawObj.Raw, nil, nil)
 // 		if err != nil {
-// 			log.Printf("Skipping invalid Kubernetes object: %v\n%s", err, rawObj)
+// 			logger.Printf("Skipping invalid Kubernetes object: %v\n%s", err, rawObj)
 // 			processedDocuments = append(processedDocuments, string(rawObj.Raw))
 // 			continue
 // 		}
@@ -201,7 +200,7 @@ func pullHelmChart(
 // 		// Add labels to valid Kubernetes objects
 // 		accessor, err := meta.Accessor(obj)
 // 		if err != nil {
-// 			log.Printf("Skipping non-Kubernetes object: %v", err)
+// 			logger.Printf("Skipping non-Kubernetes object: %v", err)
 // 			continue
 // 		}
 // 		commonLabels, commonAnnotations := generateCommonK8sLabelsAndAnnotationsToK8sObject()

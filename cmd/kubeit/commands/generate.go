@@ -40,12 +40,16 @@ var GenerateCmd = &cobra.Command{
 		}
 	},
 	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
-		// Delete the work directory
+		// Cleanup: Delete the work directory
 		workDir := generateSetOptions.WorkDir
 		if err := os.RemoveAll(workDir); err != nil {
 			return fmt.Errorf("Failed to delete work directory: %v", err)
-		} else {
-			logger.Debugf("Work directory deleted: %s", workDir)
+		}
+		logger.Debugf("Work directory deleted: %s", workDir)
+
+		// If there was an error in RunE, return it now
+		if err, ok := cmd.Context().Value("cmdError").(error); ok && err != nil {
+			return err // Return the stored error after cleanup
 		}
 		return nil
 	},

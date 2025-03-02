@@ -1,7 +1,9 @@
 package commands
 
 import (
+	"context"
 	"fmt"
+	"strings"
 
 	"github.com/komailo/kubeit/pkg/generate"
 	"github.com/spf13/cobra"
@@ -11,13 +13,33 @@ var GenerateManifestCmd = &cobra.Command{
 	Use:   "manifest [source-config-uri]",
 	Short: "Generate Kubernetes manifests from a Kubeit configuration",
 	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
+	Run: func(cmd *cobra.Command, args []string) {
 		sourceConfigUri := args[0]
 
-		errs := generate.GenerateManifests(&generateSetOptions, sourceConfigUri)
-		if len(errs) > 0 {
-			return fmt.Errorf("Failed to generate manifests: %v", errs)
+		generateErrs, loadFileErrs := generate.GenerateManifests(&generateSetOptions, sourceConfigUri)
+
+		errorMap := make(map[string][]string) // Map to store errors per file
+		if loadFileErrs != nil {
+			for file, errList := range loadFileErrs {
+				for _, err := range errList {
+					errorMap[file] = append(errorMap[file], fmt.Sprintf("- %v", err))
+				}
+			}
 		}
-		return nil
+		if generateErrs != nil {
+			errorMap["Generate Errors"] = append(errorMap["Generate Errors"], fmt.Sprintf("- %v", generateErrs))
+		}
+
+		// If there are errors, format them nicely
+		if len(errorMap) > 0 {
+			var formattedErrors []string
+			for file, errList := range errorMap {
+				formattedErrors = append(formattedErrors,
+					fmt.Sprintf("%s:\n  %s", file, strings.Join(errList, "\n  ")))
+			}
+			finalErr := fmt.Errorf("\n%s", strings.Join(formattedErrors, "\n"))
+			cmd.SetContext(context.WithValue(cmd.Context(), "cmdError", finalErr))
+		}
+
 	},
 }

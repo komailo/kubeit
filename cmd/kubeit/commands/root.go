@@ -39,6 +39,7 @@ func init() {
 	// Register subcommands
 	RootCmd.AddCommand(GenerateCmd)
 	RootCmd.AddCommand(VersionCmd)
+	RootCmd.SilenceUsage = true
 }
 
 func initLogger() {

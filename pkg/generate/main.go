@@ -13,30 +13,29 @@ import (
 	"github.com/spf13/cobra/doc"
 )
 
-func GenerateManifests(generateSetOptions *GenerateOptions, sourceConfigUri string) []error {
+func GenerateManifests(generateSetOptions *GenerateOptions, sourceConfigUri string) ([]error, map[string][]error) {
 	parsedSource, err := parseSourceConfigURI(sourceConfigUri)
 	if err != nil {
-		return []error{err}
+		return []error{err}, nil
 	}
 
 	logger.Infof("Generating manifests from %s", sourceConfigUri)
 	var kubeitFileResources []apis.KubeitFileResource
 
 	if parsedSource.Scheme == "file" {
-		var errs map[string][]error
-		kubeitFileResources, errs = apis.LoadKubeitResourcesFromDir(parsedSource.Path)
-		for fileName, err := range errs {
-			logger.Errorf("Error loading Kubeit resource from file: %s", fileName)
-			for _, e := range err {
-				logger.Errorf("    %s", e)
-			}
+		var loadErrs map[string][]error
+		kubeitFileResources, loadErrs = apis.LoadKubeitResourcesFromDir(parsedSource.Path)
+		if loadErrs != nil {
+			logger.Errorf("%d files have errors while loading Kubeit resources", len(loadErrs))
+			return nil, loadErrs
 		}
+	} else {
+		return []error{fmt.Errorf("unsupported source config URI scheme: %s", parsedSource.Scheme)}, nil
 	}
 
 	resourceCount := len(kubeitFileResources)
 	if resourceCount == 0 {
-		logger.Warn("No Kubeit resources found")
-		return nil
+		return []error{fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri)}, nil
 	} else {
 		kindCounts := apis.CountResources(kubeitFileResources)
 		for kind, count := range kindCounts {
@@ -50,11 +49,11 @@ func GenerateManifests(generateSetOptions *GenerateOptions, sourceConfigUri stri
 		logger.Debugf("Found resource Kind: %s, API Version: %s in file: %s", kubeitFileResource.APIMetadata.Kind, kubeitFileResource.APIMetadata.APIVersion, kubeitFileResource.FileName)
 	}
 
-	errs := generateHelmTemplates(kubeitFileResources, generateSetOptions)
-	if errs != nil {
-		return errs
+	generateErrs := generateHelmTemplates(kubeitFileResources, generateSetOptions)
+	if generateErrs != nil {
+		return generateErrs, nil
 	}
-	return nil
+	return nil, nil
 
 }
 
