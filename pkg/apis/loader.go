@@ -13,6 +13,7 @@ import (
 	"github.com/komailo/kubeit/internal/logger"
 	appv1alpha1 "github.com/komailo/kubeit/pkg/apis/application/v1alpha1"
 	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
+	"github.com/komailo/kubeit/pkg/utils"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"gopkg.in/yaml.v3"
@@ -30,7 +31,7 @@ var TypeRegistry = map[string]map[string]reflect.Type{
 	},
 }
 
-// LoadKubeitResource dynamically loads the correct struct based on the provided single
+// loadKubeitResource dynamically loads the correct struct based on the provided single
 // YAML document.
 // It extracts the API metadata (apiVersion and kind) to determine the appropriate
 // struct type,
@@ -108,7 +109,7 @@ func loadKubeitResource(data []byte) (KubeitResource, error) {
 	return res, nil
 }
 
-// LoadKubeitResources loads Kubeit resources from a byte slice containing YAML data.
+// loadKubeitResources loads Kubeit resources from a byte slice containing YAML data.
 // It supports multi-document YAML files and processes each document to extract Kubeit
 // resources.
 //
@@ -124,7 +125,7 @@ func loadKubeitResource(data []byte) (KubeitResource, error) {
 //  2. Marshals each document back into YAML for processing.
 //  3. Loads each document as a Kubeit resource using the LoadKubeitResource function.
 //  4. Collects and returns any errors encountered during the process.
-func LoadKubeitResources(data []byte) ([]KubeitResource, []error) {
+func loadKubeitResources(data []byte) ([]KubeitResource, []error) {
 	var resources []KubeitResource
 	var errors []error
 
@@ -153,7 +154,7 @@ func LoadKubeitResources(data []byte) ([]KubeitResource, []error) {
 	return resources, errors
 }
 
-// LoadKubeitResourcesFromDir loads all Kubeit resources from a specified directory,
+// loadKubeitResourcesFromDir loads all Kubeit resources from a specified directory,
 // supporting multi-document YAML files.
 // It recursively traverses the directory tree, reading and processing YAML files to
 // extract Kubeit resources.
@@ -176,7 +177,7 @@ func LoadKubeitResources(data []byte) ([]KubeitResource, []error) {
 //
 // Partially loaded resources are returned in case of errors. Always check the errors
 // map to ensure all resources were loaded successfully.
-func LoadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]error) {
+func loadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]error) {
 	var resources []KubeitFileResource
 	errors := make(map[string][]error)
 
@@ -205,7 +206,7 @@ func LoadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]
 			return nil
 		}
 
-		fileResources, fileErrors := LoadKubeitResources(data)
+		fileResources, fileErrors := loadKubeitResources(data)
 		if len(fileErrors) > 0 {
 			errors[filePath] = append(errors[filePath], fileErrors...)
 		}
@@ -244,4 +245,75 @@ func CountResources(resources []KubeitFileResource) map[string]int {
 		counts[resource.APIMetadata.Kind]++
 	}
 	return counts
+}
+
+// Loader loads Kubeit resources from a specified source configuration URI.
+// It supports loading resources from local file directories.
+//
+// Parameters:
+//   - sourceConfigUri: A string representing the source configuration URI. See
+//     supported Schemes bellow.
+//
+// Returns:
+//   - []KubeitFileResource: A slice of KubeitFileResource structs, each containing the
+//     full file path, resource, and API metadata.
+//   - error: Errors encountered during the process, or nil if no errors occurred.
+//   - map[string][]error: A map where the keys are file paths and the values are slices
+//     of errors encountered while processing those files. If errors are found, the
+//     error in the second return will not be nil.
+//
+// Supported Schemes:
+//   - file: Loads Kubeit resources from a local file directory.
+//
+// The function performs the following steps:
+//  1. Checks if the URI is a valid file and converts it to a file scheme if necessary.
+//  2. Parses the source configuration URI.
+//  3. If the URI scheme is "file", it loads Kubeit resources from the specified
+//     directory.
+//  4. Counts the number of Kubeit resources by their kind and logs the counts.
+//  5. Returns the loaded resources, any errors encountered, and a map of
+//     file-specific errors.
+func Loader(sourceConfigUri string) ([]KubeitFileResource, error, map[string][]error) {
+	if uriLooksIsFile, newSourceConfigUri := utils.UriIsFile(sourceConfigUri); uriLooksIsFile {
+		logger.Debugf("URI %s is a valid file, converting to file scheme", sourceConfigUri)
+		sourceConfigUri = newSourceConfigUri
+	}
+
+	parsedSource, err := utils.ParseSourceConfigURI(sourceConfigUri)
+	if err != nil {
+		return nil, err, nil
+	}
+
+	logger.Infof("Generating manifests from %s", sourceConfigUri)
+	var kubeitFileResources []KubeitFileResource
+	var loadErrs map[string][]error
+
+	if parsedSource.Scheme == "file" {
+		kubeitFileResources, loadErrs = loadKubeitResourcesFromDir(parsedSource.Path)
+	} else {
+		return nil, fmt.Errorf("unsupported source config URI scheme: %s", parsedSource.Scheme), nil
+	}
+
+	if len(loadErrs) != 0 {
+		errMsg := fmt.Sprintf("%d files have errors while loading Kubeit resources", len(loadErrs))
+		logger.Error(errMsg)
+		return nil, fmt.Errorf(errMsg), loadErrs
+	}
+
+	resourceCount := len(kubeitFileResources)
+	if resourceCount == 0 {
+		return nil, fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri), nil
+	} else {
+		kindCounts := CountResources(kubeitFileResources)
+		for kind, count := range kindCounts {
+			logger.Infof("%s: %d", kind, count)
+		}
+
+		logger.Infof("Found %d Kubeit resources", resourceCount)
+	}
+
+	for _, kubeitFileResource := range kubeitFileResources {
+		logger.Debugf("Found resource Kind: %s, API Version: %s in file: %s", kubeitFileResource.APIMetadata.Kind, kubeitFileResource.APIMetadata.APIVersion, kubeitFileResource.FileName)
+	}
+	return kubeitFileResources, nil, nil
 }

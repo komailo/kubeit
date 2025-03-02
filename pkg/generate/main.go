@@ -8,35 +8,17 @@ import (
 	"github.com/komailo/kubeit/common"
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/pkg/apis"
-	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 )
 
 func GenerateManifests(generateSetOptions *GenerateOptions, sourceConfigUri string) ([]error, map[string][]error) {
 
-	if uriLooksIsFile, newSourceConfigUri := uriIsFile(sourceConfigUri); uriLooksIsFile {
-		logger.Debugf("URI %s is a valid file, converting to file scheme", sourceConfigUri)
-		sourceConfigUri = newSourceConfigUri
-	}
-
-	parsedSource, err := parseSourceConfigURI(sourceConfigUri)
-	if err != nil {
-		return []error{err}, nil
-	}
-
 	logger.Infof("Generating manifests from %s", sourceConfigUri)
-	var kubeitFileResources []apis.KubeitFileResource
+	var kubeitFileResources, loaderErrs, fileLoadErrs = apis.Loader(sourceConfigUri)
 
-	if parsedSource.Scheme == "file" {
-		var loadErrs map[string][]error
-		kubeitFileResources, loadErrs = apis.LoadKubeitResourcesFromDir(parsedSource.Path)
-		if len(loadErrs) != 0 {
-			logger.Errorf("%d files have errors while loading Kubeit resources", len(loadErrs))
-			return nil, loadErrs
-		}
-	} else {
-		return []error{fmt.Errorf("unsupported source config URI scheme: %s", parsedSource.Scheme)}, nil
+	if loaderErrs != nil {
+		return []error{loaderErrs}, fileLoadErrs
 	}
 
 	resourceCount := len(kubeitFileResources)
@@ -61,42 +43,6 @@ func GenerateManifests(generateSetOptions *GenerateOptions, sourceConfigUri stri
 	}
 	return nil, nil
 
-}
-
-func generateHelmTemplates(kubeitFileResources []apis.KubeitFileResource, generateSetOptions *GenerateOptions) []error {
-	var errs []error
-	for _, kubeitFileResource := range kubeitFileResources {
-		if kubeitFileResource.APIMetadata.Kind != helmappv1alpha1.Kind {
-			continue
-		}
-
-		if kubeitFileResource.APIMetadata.APIVersion != helmappv1alpha1.GroupVersion {
-			continue
-		}
-
-		if resource, ok := kubeitFileResource.Resource.(*helmappv1alpha1.HelmApplication); ok {
-			err := GenerateManifestFromHelm(*resource, generateSetOptions)
-			if err != nil {
-				errs = append(errs, err)
-			}
-		}
-	}
-	return errs
-}
-
-func uriIsFile(uri string) (bool, string) {
-	_, err := os.Stat(uri)
-	if err == nil {
-		logger.Debugf("File %s found so URI does look like a file", uri)
-		absPath, err := filepath.Abs(uri)
-		if err != nil {
-			logger.Warnf("Failed to get absolute path for file %s", uri)
-			return false, ""
-		}
-		return true, fmt.Sprintf("file://%s", absPath)
-	}
-	logger.Debugf("File %s not found so URI does not look like a file", uri)
-	return false, ""
 }
 
 func GenerateCliDocs(rootCmd *cobra.Command, generateSetOptions *GenerateOptions) error {
