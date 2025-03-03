@@ -9,6 +9,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type contextKey string
+
+const cmdErrorKey contextKey = "cmdError"
+
 // Options specific to the generate command
 var generateSetOptions generate.GenerateOptions
 

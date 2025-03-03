@@ -313,7 +313,7 @@ func Loader(sourceConfigUri string) ([]KubeitFileResource, error, map[string][]e
 	if len(loadErrs) != 0 {
 		errMsg := fmt.Sprintf("%d files have errors while loading Kubeit resources", len(loadErrs))
 		logger.Error(errMsg)
-		return nil, fmt.Errorf(errMsg), loadErrs
+		return nil, fmt.Errorf("%v", errMsg), loadErrs
 	}
 
 	resourceCount := len(kubeitFileResources)

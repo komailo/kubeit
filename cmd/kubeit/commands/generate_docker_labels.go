@@ -26,10 +26,9 @@ var GenerateDockerLabelsCmd = &cobra.Command{
 				}
 			}
 		}
-		if generateErrs != nil {
-			for _, err := range generateErrs {
-				errorMap["Generate Errors"] = append(errorMap["Generate Errors"], fmt.Sprintf("- %v", err))
-			}
+
+		for _, err := range generateErrs {
+			errorMap["Generate Errors"] = append(errorMap["Generate Errors"], fmt.Sprintf("- %v", err))
 		}
 
 		// If there are errors, format them nicely
@@ -40,7 +39,7 @@ var GenerateDockerLabelsCmd = &cobra.Command{
 					fmt.Sprintf("%s:\n  %s", file, strings.Join(errList, "\n  ")))
 			}
 			finalErr := fmt.Errorf("\n%s", strings.Join(formattedErrors, "\n"))
-			cmd.SetContext(context.WithValue(cmd.Context(), "cmdError", finalErr))
+			cmd.SetContext(context.WithValue(cmd.Context(), cmdErrorKey, finalErr))
 		}
 
 	},
