@@ -247,6 +247,22 @@ func CountResources(resources []KubeitFileResource) map[string]int {
 	return counts
 }
 
+func LogResource(kubeitFileResources []KubeitFileResource) {
+	resourceCount := len(kubeitFileResources)
+	if resourceCount != 0 {
+		kindCounts := CountResources(kubeitFileResources)
+		for kind, count := range kindCounts {
+			logger.Infof("%s: %d", kind, count)
+		}
+
+		logger.Infof("Found %d Kubeit resources", resourceCount)
+	}
+
+	for _, kubeitFileResource := range kubeitFileResources {
+		logger.Debugf("Found resource Kind: %s, API Version: %s in file: %s", kubeitFileResource.APIMetadata.Kind, kubeitFileResource.APIMetadata.APIVersion, kubeitFileResource.FileName)
+	}
+}
+
 // Loader loads Kubeit resources from a specified source configuration URI.
 // It supports loading resources from local file directories.
 //

@@ -1,6 +1,8 @@
 package apis
 
-import k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+import (
+	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+)
 
 // the base type that all Kubeit resources must implement
 type KubeitResource interface {

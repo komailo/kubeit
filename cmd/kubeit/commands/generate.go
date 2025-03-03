@@ -60,6 +60,7 @@ func init() {
 	GenerateCmd.AddCommand(GenerateManifestCmd)
 	GenerateCmd.AddCommand(generateCliDocsCmd)
 	GenerateCmd.AddCommand(generateSchemaCmd)
+	GenerateCmd.AddCommand(GenerateDockerLabelsCmd)
 
 	// Bind the output-dir flag to generateOpts
 	GenerateCmd.PersistentFlags().StringVarP(
