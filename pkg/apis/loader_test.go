@@ -96,7 +96,7 @@ kind: ""
 			continue
 		}
 		t.Run(tc.name, func(t *testing.T) {
-			resource, err := LoadKubeitResource([]byte(tc.yamlData))
+			resource, err := loadKubeitResource([]byte(tc.yamlData))
 
 			if tc.expectError {
 				assert.Error(t, err)
@@ -203,7 +203,7 @@ kind: af
 		})
 	}
 
-	resources, errors := LoadKubeitResourcesFromDir(tempDir)
+	resources, errors := loadKubeitResourcesFromDir(tempDir)
 
 	var validCount, errorCount int
 	for _, tc := range testCases {
@@ -330,7 +330,7 @@ kind: UnknownKind
 	}
 
 	// Run function under test
-	resources, errors := LoadKubeitResourcesFromDir(tempDir)
+	resources, errors := loadKubeitResourcesFromDir(tempDir)
 
 	// Validate expected resources count
 	assert.Len(t, resources, len(expectedResources))

@@ -9,14 +9,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var GenerateManifestCmd = &cobra.Command{
-	Use:   "manifest [source-config-uri]",
-	Short: "Generate Kubernetes manifests from a Kubeit configuration",
+var GenerateDockerLabelsCmd = &cobra.Command{
+	Use:   "docker-labels [source-config-uri]",
+	Short: "Generate Docker labels from a Kubeit configuration",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		sourceConfigUri := args[0]
 
-		generateErrs, loadFileErrs := generate.GenerateManifests(&generateSetOptions, sourceConfigUri)
+		generateErrs, loadFileErrs := generate.GenerateDockerLabels(&generateSetOptions, sourceConfigUri)
 
 		errorMap := make(map[string][]string) // Map to store errors per file
 		if len(loadFileErrs) != 0 {

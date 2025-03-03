@@ -1,12 +1,17 @@
 package commands
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/pkg/generate"
 	"github.com/spf13/cobra"
 )
+
+type contextKey string
+
+const cmdErrorKey contextKey = "cmdError"
 
 // Options specific to the generate command
 var generateSetOptions generate.GenerateOptions
@@ -38,14 +43,19 @@ var GenerateCmd = &cobra.Command{
 			logger.Fatalf("Failed to create output directory: %v", err)
 		}
 	},
-	PersistentPostRun: func(cmd *cobra.Command, args []string) {
-		// Delete the work directory
+	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
+		// Cleanup: Delete the work directory
 		workDir := generateSetOptions.WorkDir
 		if err := os.RemoveAll(workDir); err != nil {
-			logger.Errorf("Failed to delete work directory: %v", err)
-		} else {
-			logger.Debugf("Work directory deleted: %s", workDir)
+			return fmt.Errorf("Failed to delete work directory: %v", err)
 		}
+		logger.Debugf("Work directory deleted: %s", workDir)
+
+		// If there was an error in RunE, return it now
+		if err, ok := cmd.Context().Value("cmdError").(error); ok && err != nil {
+			return err // Return the stored error after cleanup
+		}
+		return nil
 	},
 }
 
@@ -54,6 +64,7 @@ func init() {
 	GenerateCmd.AddCommand(GenerateManifestCmd)
 	GenerateCmd.AddCommand(generateCliDocsCmd)
 	GenerateCmd.AddCommand(generateSchemaCmd)
+	GenerateCmd.AddCommand(GenerateDockerLabelsCmd)
 
 	// Bind the output-dir flag to generateOpts
 	GenerateCmd.PersistentFlags().StringVarP(
