@@ -316,18 +316,6 @@ func Loader(sourceConfigUri string) ([]KubeitFileResource, error, map[string][]e
 		return nil, fmt.Errorf("%v", errMsg), loadErrs
 	}
 
-	resourceCount := len(kubeitFileResources)
-	if resourceCount == 0 {
-		return nil, fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri), nil
-	} else {
-		kindCounts := CountResources(kubeitFileResources)
-		for kind, count := range kindCounts {
-			logger.Infof("%s: %d", kind, count)
-		}
-
-		logger.Infof("Found %d Kubeit resources", resourceCount)
-	}
-
 	for _, kubeitFileResource := range kubeitFileResources {
 		logger.Debugf("Found resource Kind: %s, API Version: %s in file: %s", kubeitFileResource.APIMetadata.Kind, kubeitFileResource.APIMetadata.APIVersion, kubeitFileResource.FileName)
 	}
