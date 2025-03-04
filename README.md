@@ -5,29 +5,33 @@
 > :warning: **Kubeit is in active development!**  
 > Expect rapid changes, breaking updates, and evolving features.
 
-Kubeit is a service-team-focused tool designed to simplify Kubernetes deployment configuration. Service teams can write a minimal YAML file describing their application or infrastructure, and Kubeit automatically transforms it into fully rendered Kubernetes objects that can be seamlessly included with the container at build time.
+Kubeit is a deployment automation tool that simplifies Kubernetes configuration for service teams and platform engineers.
 
-By shipping the Kubeit configuration inside the container, Kubernetes manifests can be generated at runtime without needing a separate Helm deployment. This creates self-contained deployable containers.
+It eliminates the need for manually managing Kubernetes manifests or Helm charts by transforming minimal Kubeit configuration into fully functional Kubernetes objects.
+
+By embedding deployment configuration inside the container, Kubeit enables self-contained deployable containers that generate their Kubernetes manifests dynamically at runtime—eliminating the need for a separate Kubernetes deployment. This reduces the number of artifacts required for deployment and ensures that Kubernetes configurations are always in sync with the application—eliminating the risk of missing or outdated dependencies.
 
 Why Choose Kubeit?
 
-- Declarative & Simple – Define your infrastructure in a straightforward YAML format, reducing complexity.
+- Minimal YAML, Maximum Simplicity – Define your infrastructure in a straightforward format, reducing complexity.
 
-- Flexible & Extensible – Supports Helm, CRDs, and custom templates, adapting to various use cases.
+- Fewer Deployment Artifacts – No need to manage separate Kubernetes manifests or Helm charts — Kubeit keeps everything self-contained.
 
-- Service-Team Friendly – Designed for service teams to manage deployments efficiently without needing to manually write Kubernetes manifests or complex Helm charts.
+- Always In Sync – Kubernetes configurations are generated alongside the container, ensuring no missing dependencies between application and infrastructure.
 
-- Seamless Integration – Easily integrates into CI/CD pipelines and development workflows for smooth deployments.
+- Extensible & Flexible – Supports Helm, CRDs, and custom templates to fit diverse deployment needs.
 
-- Deployment Configuration Alongside the Container Image – Keep your deployment settings with your container for better portability and consistency.
+- Seamless CI/CD Integration – Works with existing pipelines and developer workflows for smooth deployments.
+
+- Portable & Consistent – Keep your deployment settings alongside your container for better traceability and portability.
 
 ## Roadmap
 
 ### Active Feature Development (MVP)
 
-- Transform Kubeit configuration into Kubernetes objects automatically.
+- :heavy_check_mark: Transform Kubeit configuration into Kubernetes objects automatically.
 
-- Embed Kubeit configuration directly into the container image for streamlined deployment.
+- :heavy_check_mark: Embed Kubeit configuration directly into the container image for streamlined deployment.
 
 ### Next Phase
 
