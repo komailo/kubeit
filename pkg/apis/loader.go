@@ -2,6 +2,8 @@ package apis
 
 import (
 	"bytes"
+	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"os"
@@ -9,7 +11,9 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/docker/docker/client"
 	"github.com/go-playground/validator/v10"
+	"github.com/komailo/kubeit/common"
 	"github.com/komailo/kubeit/internal/logger"
 	appv1alpha1 "github.com/komailo/kubeit/pkg/apis/application/v1alpha1"
 	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
@@ -181,7 +185,14 @@ func loadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]
 	var resources []KubeitFileResource
 	errors := make(map[string][]error)
 
-	err := filepath.Walk(dir, func(filePath string, info os.FileInfo, err error) error {
+	absDirPath, err := filepath.Abs(dir)
+	if err != nil {
+		logger.Warnf("Failed to get absolute path for file %s", dir)
+		errors[dir] = append(errors[dir], fmt.Errorf("failed to walk directory: %w", err))
+		return nil, errors
+	}
+
+	err = filepath.Walk(absDirPath, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
 			errors[filePath] = append(errors[filePath], fmt.Errorf("error accessing file: %w", err))
 			return nil
@@ -223,7 +234,61 @@ func loadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]
 	})
 
 	if err != nil {
-		errors[dir] = append(errors[dir], fmt.Errorf("failed to walk directory: %w", err))
+		errors[absDirPath] = append(errors[absDirPath], fmt.Errorf("failed to walk directory: %w", err))
+	}
+
+	return resources, errors
+}
+
+func loadKubeitResourcesFromDockerImage(imageRef string) ([]KubeitFileResource, map[string][]error) {
+	var resources []KubeitFileResource
+	errors := make(map[string][]error)
+
+	if exists, err := utils.CheckDockerImageExists(imageRef); !exists || err != nil {
+		errors[imageRef] = append(errors[imageRef], fmt.Errorf("failed to find image: %w", err))
+		return nil, errors
+	}
+
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		errors[imageRef] = append(errors[imageRef], fmt.Errorf("failed to create Docker client: %w", err))
+		return nil, errors
+	}
+
+	imageInspect, _, err := cli.ImageInspectWithRaw(context.Background(), imageRef)
+	if err != nil {
+		errors[imageRef] = append(errors[imageRef], fmt.Errorf("failed to inspect Docker image: %w", err))
+		return nil, errors
+	}
+
+	// check if kubeit.komail.io/resources is present in the labels
+	labelKey := fmt.Sprintf(common.KubeitDomain + "/resources")
+	base64Resource, ok := imageInspect.Config.Labels[labelKey]
+	if !ok {
+		errors[imageRef] = append(errors[imageRef], fmt.Errorf("no Kubeit resources found in image: %s", imageRef))
+		return nil, errors
+	}
+
+	// decode the base64 encoded resources
+	decodedResources, err := base64.StdEncoding.DecodeString(base64Resource)
+	if err != nil {
+		errors[imageRef] = append(errors[imageRef], fmt.Errorf("failed to decode base64 resources: %w", err))
+		return nil, errors
+	}
+
+	logger.Debugf("Decoded resources:\n%s", decodedResources)
+
+	fileResources, fileErrors := loadKubeitResources(decodedResources)
+	if len(fileErrors) > 0 {
+		errors[imageRef] = append(errors[imageRef], fileErrors...)
+	}
+
+	for _, resource := range fileResources {
+		resources = append(resources, KubeitFileResource{
+			FileName:    imageRef,
+			Resource:    resource,
+			APIMetadata: resource.GetAPIMetadata(),
+		})
 	}
 
 	return resources, errors
@@ -303,24 +368,21 @@ func LogResources(kubeitFileResources []KubeitFileResource) {
 //  5. Returns the loaded resources, any errors encountered, and a map of
 //     file-specific errors.
 func Loader(sourceConfigUri string) ([]KubeitFileResource, error, map[string][]error) {
-	if uriLooksIsFile, newSourceConfigUri := utils.UriIsFile(sourceConfigUri); uriLooksIsFile {
-		logger.Debugf("URI %s is a valid file, converting to file scheme", sourceConfigUri)
-		sourceConfigUri = newSourceConfigUri
-	}
-
-	parsedSource, err := utils.ParseSourceConfigURI(sourceConfigUri)
+	sourceScheme, source, err := utils.SourceConfigUriParser(sourceConfigUri)
 	if err != nil {
 		return nil, err, nil
 	}
 
-	logger.Infof("Generating manifests from %s", sourceConfigUri)
+	logger.Infof("Loading Kubeit resources from %s", sourceConfigUri)
 	var kubeitFileResources []KubeitFileResource
 	var loadErrs map[string][]error
 
-	if parsedSource.Scheme == "file" {
-		kubeitFileResources, loadErrs = loadKubeitResourcesFromDir(parsedSource.Path)
+	if sourceScheme == "file" {
+		kubeitFileResources, loadErrs = loadKubeitResourcesFromDir(source)
+	} else if sourceScheme == "docker" {
+		kubeitFileResources, loadErrs = loadKubeitResourcesFromDockerImage(source)
 	} else {
-		return nil, fmt.Errorf("unsupported source config URI scheme: %s", parsedSource.Scheme), nil
+		return nil, fmt.Errorf("unsupported source config URI scheme: %s", sourceScheme), nil
 	}
 
 	if len(loadErrs) != 0 {
@@ -329,8 +391,5 @@ func Loader(sourceConfigUri string) ([]KubeitFileResource, error, map[string][]e
 		return nil, fmt.Errorf("%v", errMsg), loadErrs
 	}
 
-	for _, kubeitFileResource := range kubeitFileResources {
-		logger.Debugf("Found resource Kind: %s, API Version: %s in file: %s", kubeitFileResource.APIMetadata.Kind, kubeitFileResource.APIMetadata.APIVersion, kubeitFileResource.FileName)
-	}
 	return kubeitFileResources, nil, nil
 }
