@@ -247,7 +247,20 @@ func CountResources(resources []KubeitFileResource) map[string]int {
 	return counts
 }
 
-func LogResource(kubeitFileResources []KubeitFileResource) {
+// LogResources logs the details of Kubeit resources.
+// It logs the total number of resources found and the count of each kind of resource.
+// Additionally, it logs detailed information about each resource in debug mode.
+//
+// Parameters:
+//   - kubeitFileResources: A slice of KubeitFileResource structs to be logged.
+//
+// The function performs the following steps:
+//  1. Counts the number of resources by their kind using the CountResources function.
+//  2. Logs the count of each kind of resource.
+//  3. Logs the total number of resources found.
+//  4. Logs detailed information about each resource in debug mode, including the kind,
+//     API version, and file name.
+func LogResources(kubeitFileResources []KubeitFileResource) {
 	resourceCount := len(kubeitFileResources)
 	if resourceCount != 0 {
 		kindCounts := CountResources(kubeitFileResources)

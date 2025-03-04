@@ -29,7 +29,7 @@ func GenerateManifests(generateSetOptions *GenerateOptions, sourceConfigUri stri
 	if resourceCount == 0 {
 		return []error{fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri)}, nil
 	} else {
-		apis.LogResource(kubeitFileResources)
+		apis.LogResources(kubeitFileResources)
 	}
 
 	generateErrs := generateHelmTemplates(kubeitFileResources, generateSetOptions)
@@ -53,7 +53,7 @@ func GenerateDockerLabels(generateSetOptions *GenerateOptions, sourceConfigUri s
 	if resourceCount == 0 {
 		return []error{fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri)}, nil
 	} else {
-		apis.LogResource(kubeitFileResources)
+		apis.LogResources(kubeitFileResources)
 	}
 
 	var kubeitResourcesYaml strings.Builder
