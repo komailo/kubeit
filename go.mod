@@ -4,7 +4,7 @@ go 1.23.4
 
 require (
 	github.com/distribution/reference v0.6.0
-	github.com/docker/docker v25.0.6+incompatible
+	github.com/docker/docker v25.0.8+incompatible
 	github.com/go-playground/validator/v10 v10.25.0
 	github.com/invopop/jsonschema v0.13.0
 	github.com/sirupsen/logrus v1.9.3
