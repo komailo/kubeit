@@ -240,6 +240,19 @@ func loadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]
 	return resources, errors
 }
 
+// loadKubeitResourcesFromDockerImage loads Kubeit resources from a Docker image
+// reference.
+// It inspects the Docker image to extract labels and processes the labels to extract
+// Kubeit resources.
+//
+// Parameters:
+//   - imageRef: A string representing the Docker image reference.
+//
+// Returns:
+//   - []KubeitFileResource: A slice of KubeitFileResource structs extracted from the
+//     Docker image labels.
+//   - map[string][]error: A map where the keys are image references and the values are
+//     slices of errors encountered while processing the image.
 func loadKubeitResourcesFromDockerImage(imageRef string) ([]KubeitFileResource, map[string][]error) {
 	var resources []KubeitFileResource
 	errors := make(map[string][]error)
@@ -360,12 +373,10 @@ func LogResources(kubeitFileResources []KubeitFileResource) {
 //   - file: Loads Kubeit resources from a local file directory.
 //
 // The function performs the following steps:
-//  1. Checks if the URI is a valid file and converts it to a file scheme if necessary.
-//  2. Parses the source configuration URI.
-//  3. If the URI scheme is "file", it loads Kubeit resources from the specified
-//     directory.
-//  4. Counts the number of Kubeit resources by their kind and logs the counts.
-//  5. Returns the loaded resources, any errors encountered, and a map of
+//  1. Parses the source configuration URI.
+//  2. Depending on the source scheme it will load Kubeit resources from a local file
+//     directory or a Docker image or any other supported scheme.
+//  3. Returns the loaded resources, any errors encountered, and a map of
 //     file-specific errors.
 func Loader(sourceConfigUri string) ([]KubeitFileResource, error, map[string][]error) {
 	sourceScheme, source, err := utils.SourceConfigUriParser(sourceConfigUri)

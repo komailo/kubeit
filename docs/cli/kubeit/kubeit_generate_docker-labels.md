@@ -1,19 +1,15 @@
-## kubeit generate cli-docs
+## kubeit generate docker-labels
 
-Generate CLI documentation
-
-### Synopsis
-
-Generates markdown documentation for the CLI commands.
+Generate Docker labels from a Kubeit configuration
 
 ```
-kubeit generate cli-docs [flags]
+kubeit generate docker-labels [source-config-uri] [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for cli-docs
+  -h, --help   help for docker-labels
 ```
 
 ### Options inherited from parent commands
