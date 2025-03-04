@@ -42,6 +42,7 @@ var GenerateManifestCmd = &cobra.Command{
 			finalErr := fmt.Errorf("\n%s", strings.Join(formattedErrors, "\n"))
 			cmd.SetContext(context.WithValue(cmd.Context(), cmdErrorKey, finalErr))
 			logger.Errorf("Error generating manifests: %v", finalErr)
+
 		}
 
 	},
