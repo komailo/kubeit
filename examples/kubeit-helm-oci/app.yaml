@@ -1,0 +1,14 @@
+---
+apiVersion: kubeit.komailo.github.io/v1alpha1
+kind: HelmApplication
+metadata:
+  name: app
+spec:
+  chart:
+    url: oci://registry-1.docker.io/bitnamicharts/redis
+    version: ">=20.11.0"
+    releaseName: redis
+  rawValues:
+    commonLabels:
+      app: my-redis
+      chart: redis

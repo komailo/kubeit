@@ -1,4 +1,6 @@
+/.kubeit/.generated/
 /build/
-/schemas/
 /coverage.html
 /coverage.out
+/dist/
+/schemas/

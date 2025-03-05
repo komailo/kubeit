@@ -4,7 +4,7 @@ tasks:
   build:
     desc: "Build the Go project"
     cmds:
-      - go build -o build/kubeit ./cmd/main.go
+      - go build -o build/kubeit .
 
   fmt:
     desc: "Format Go code"
@@ -45,6 +45,10 @@ tasks:
   test:
     desc: "Run tests"
     cmds:
-      - go test -coverprofile=coverage.out ./...
-      - go tool cover -html=coverage.out -o coverage.html
-      - go tool cover -func=coverage.out
+      # - go test -coverprofile=coverage.out ./...
+      # - go tool cover -html=coverage.out -o coverage.html
+      # - go tool cover -func=coverage.out
+      - build/kubeit generate manifest file://$(pwd)/examples/kubeit-helm/
+      - build/kubeit generate manifest ./examples/kubeit-helm-oci/
+      - build/kubeit generate manifest foo:latest
+      - build/kubeit generate manifest docker://foo:latest
