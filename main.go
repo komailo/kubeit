@@ -4,7 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/komailo/kubeit/cmd/kubeit/commands"
+	kubeitCmd "github.com/komailo/kubeit/cmd/kubeit/commands"
 	"github.com/spf13/cobra"
 )
 
@@ -15,9 +15,9 @@ func main() {
 
 	switch binaryName {
 	case "kubeit":
-		command = commands.NewCommand()
+		command = kubeitCmd.NewCommand()
 	default:
-		command = commands.NewCommand()
+		command = kubeitCmd.NewCommand()
 	}
 
 	if err := command.Execute(); err != nil {

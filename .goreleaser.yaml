@@ -16,7 +16,6 @@ builds:
     goos:
       - linux
       - darwin
-      - windows
     goarch:
       - amd64
       - arm64
@@ -27,7 +26,8 @@ archives:
       - kubeit-cli
     name_template: |-
       {{ .ProjectName }}-{{ .Os }}-{{ .Arch }}
-    format: binary
+    formats:
+      - binary
 
 checksum:
   name_template: "{{ .ProjectName }}_checksums.txt"

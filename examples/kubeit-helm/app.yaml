@@ -1,0 +1,15 @@
+---
+apiVersion: kubeit.komailo.github.io/v1alpha1
+kind: HelmApplication
+metadata:
+  name: app
+spec:
+  chart:
+    repository: https://kubernetes.github.io/ingress-nginx/
+    name: ingress-nginx
+    version: ">=4.11.2"
+    releaseName: my-nginx
+  rawValues:
+    commonLabels:
+      app: my-nginx
+      chart: ingress-nginx
