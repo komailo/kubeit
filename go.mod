@@ -4,7 +4,7 @@ go 1.23.4
 
 require (
 	github.com/distribution/reference v0.6.0
-	github.com/docker/docker v25.0.8+incompatible
+	github.com/docker/docker v28.0.1+incompatible
 	github.com/go-playground/validator/v10 v10.25.0
 	github.com/invopop/jsonschema v0.13.0
 	github.com/sirupsen/logrus v1.9.3
@@ -96,6 +96,7 @@ require (
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
+	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/locker v1.0.1 // indirect
 	github.com/moby/spdystream v0.5.0 // indirect
 	github.com/moby/term v0.5.0 // indirect
