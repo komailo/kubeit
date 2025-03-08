@@ -38,7 +38,7 @@ Try out the Kubeit configurations in the [examples](./examples/)
 1. Install Kubeit
 
    ```sh
-   go install github.com/komailo/kubeit:v0.1.0
+   go install github.com/komailo/kubeit
    ```
 
 1. Generate the labels to attach to your Docker container
