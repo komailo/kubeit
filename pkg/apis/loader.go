@@ -268,7 +268,7 @@ func loadKubeitResourcesFromDockerImage(imageRef string) ([]KubeitFileResource, 
 		return nil, errors
 	}
 
-	imageInspect, _, err := cli.ImageInspectWithRaw(context.Background(), imageRef)
+	imageInspect, err := cli.ImageInspect(context.Background(), imageRef)
 	if err != nil {
 		errors[imageRef] = append(errors[imageRef], fmt.Errorf("failed to inspect Docker image: %w", err))
 		return nil, errors

@@ -14,7 +14,7 @@ func CheckDockerImageExists(imageRef string) (bool, error) {
 		return false, fmt.Errorf("failed to create Docker client: %w", err)
 	}
 
-	_, _, err = cli.ImageInspectWithRaw(context.Background(), imageRef)
+	_, err = cli.ImageInspect(context.Background(), imageRef)
 	if err != nil {
 		if client.IsErrNotFound(err) {
 			return false, nil
