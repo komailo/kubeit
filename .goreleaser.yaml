@@ -7,7 +7,7 @@ before:
 
 builds:
   - id: kubeit-cli
-    main: ./cmd/main.go
+    main: ./main.go
     binary: kubeit-{{ .Os }}-{{ .Arch }}
     ldflags:
       - "-X github.com/komailo/kubeit/common.version={{ .Version }}"
@@ -26,8 +26,7 @@ archives:
       - kubeit-cli
     name_template: |-
       {{ .ProjectName }}-{{ .Os }}-{{ .Arch }}
-    formats:
-      - binary
+    format: binary
 
 checksum:
   name_template: "{{ .ProjectName }}_checksums.txt"
