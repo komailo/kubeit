@@ -10,9 +10,11 @@ builds:
     main: ./main.go
     binary: kubeit-{{ .Os }}-{{ .Arch }}
     ldflags:
-      - "-X github.com/komailo/kubeit/common.version={{ .Version }}"
-      - "-X github.com/komailo/kubeit/common.buildDate={{ .Date }}"
-      - "-X github.com/komailo/kubeit/common.gitCommit={{ .FullCommit }}"
+      - "-X github.com/komailo/kubeit/internal/version.buildDate={{ .Date }}"
+      - "-X github.com/komailo/kubeit/internal/version.gitCommit={{ .FullCommit }}"
+      - "-X github.com/komailo/kubeit/internal/version.gitSummary={{ .Summary }}"
+      - "-X github.com/komailo/kubeit/internal/version.gitTreeState={{ .GitTreeState }}"
+      - "-X github.com/komailo/kubeit/internal/version.version={{ .Version }}"
     goos:
       - linux
       - darwin

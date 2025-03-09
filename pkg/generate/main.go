@@ -10,6 +10,7 @@ import (
 
 	"github.com/komailo/kubeit/common"
 	"github.com/komailo/kubeit/internal/logger"
+	"github.com/komailo/kubeit/internal/version"
 	"github.com/komailo/kubeit/pkg/apis"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
@@ -80,7 +81,7 @@ func GenerateDockerLabels(generateSetOptions *GenerateOptions, sourceConfigUri s
 
 	// Generate the docker build command with multiple labels
 	labels := []string{
-		fmt.Sprintf("%s/version=%s", common.KubeitDomain, common.Version),
+		fmt.Sprintf("%s/version=%s", common.KubeitDomain, version.GetBuildInfo().Version),
 		fmt.Sprintf("%s/resources=%s", common.KubeitDomain, encodedResources),
 	}
 

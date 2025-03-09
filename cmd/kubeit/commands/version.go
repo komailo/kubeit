@@ -6,8 +6,8 @@ import (
 
 	_ "embed" // Ensure the embed package is imported
 
-	"github.com/komailo/kubeit/common"
 	"github.com/komailo/kubeit/internal/logger"
+	"github.com/komailo/kubeit/internal/version"
 	"github.com/spf13/cobra"
 )
 
@@ -20,10 +20,11 @@ const (
 	licenseFlag = "license"
 )
 
+// The dependencies that we want to print the version of
 var depNames = map[string]string{
 	"github.com/docker/docker": "Docker Client",
 	"helm.sh/helm/v3":          "Helm",
-	"k8s.io/client-go":         "Kubernetes API machinery",
+	"k8s.io/apimachinery":      "Kubernetes API Machinery",
 }
 
 // VersionCmd provides the version of the tool
@@ -40,13 +41,18 @@ var VersionCmd = &cobra.Command{
 			return
 		}
 
+		fmt.Printf("Dependencies:\n")
 		// Iterate over the dependencies and print their versions
 		for _, dep := range bi.Deps {
 			if name, ok := depNames[dep.Path]; ok {
-				fmt.Printf("%s Version: %s\n", name, dep.Version)
+				fmt.Printf("    %s: %s (%s)\n", name, dep.Version, dep.Sum)
 			}
 		}
-		fmt.Printf("Kubeit version: %s\n\n", common.Version)
+		fmt.Printf("\n")
+
+		version.PrintBuildInfo()
+
+		fmt.Printf("\n")
 
 		if !showLicense {
 			fmt.Printf("For license information, run: kubeit version --%s\n", licenseFlag)

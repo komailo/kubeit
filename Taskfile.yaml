@@ -3,8 +3,9 @@ version: "3"
 tasks:
   build:
     desc: "Build the Go project"
-    cmds:
-      - go build -o build/kubeit .
+    deps:
+      - go-mod-tidy
+      - go-releaser-local
 
   fmt:
     desc: "Format Go code"
@@ -52,3 +53,22 @@ tasks:
       - build/kubeit generate manifest ./examples/kubeit-helm-oci/
       - build/kubeit generate manifest foo:latest
       - build/kubeit generate manifest docker://foo:latest
+
+  ## Go related operations
+  go-mod-tidy:
+    desc: Tidy go modules
+    cmds:
+      - go mod tidy
+
+  go-mod-update:
+    desc: Update go modules
+    deps:
+      - go-mod-tidy
+    cmds:
+      - go get -u ./...
+  ## End Go related operations
+
+  go-releaser-local:
+    desc: Run Go releaser locally to produce artifacts
+    cmds:
+      - ~/go/bin/goreleaser --snapshot --skip=publish --clean
