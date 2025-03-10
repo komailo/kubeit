@@ -17,3 +17,8 @@ type KubeitFileResource struct {
 	Resource    KubeitResource
 	APIMetadata k8smetav1.TypeMeta
 }
+
+type LoaderMeta struct {
+	Source string
+	Scheme string
+}

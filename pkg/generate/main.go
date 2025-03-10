@@ -20,7 +20,7 @@ import (
 func GenerateManifests(generateSetOptions *GenerateOptions, sourceConfigUri string) ([]error, map[string][]error) {
 
 	logger.Infof("Generating manifests from %s", sourceConfigUri)
-	var kubeitFileResources, loaderErrs, fileLoadErrs = apis.Loader(sourceConfigUri)
+	var kubeitFileResources, _, loaderErrs, fileLoadErrs = apis.Loader(sourceConfigUri)
 
 	if loaderErrs != nil {
 		return []error{loaderErrs}, fileLoadErrs
@@ -44,7 +44,7 @@ func GenerateManifests(generateSetOptions *GenerateOptions, sourceConfigUri stri
 func GenerateDockerLabels(generateSetOptions *GenerateOptions, sourceConfigUri string) ([]error, map[string][]error) {
 	logger.Infof("Generating Docker Labels from %s", sourceConfigUri)
 
-	kubeitFileResources, loaderErrs, fileLoadErrs := apis.Loader(sourceConfigUri)
+	kubeitFileResources, _, loaderErrs, fileLoadErrs := apis.Loader(sourceConfigUri)
 
 	if loaderErrs != nil {
 		return []error{loaderErrs}, fileLoadErrs

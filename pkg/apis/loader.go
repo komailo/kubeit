@@ -378,10 +378,16 @@ func LogResources(kubeitFileResources []KubeitFileResource) {
 //     directory or a Docker image or any other supported scheme.
 //  3. Returns the loaded resources, any errors encountered, and a map of
 //     file-specific errors.
-func Loader(sourceConfigUri string) ([]KubeitFileResource, error, map[string][]error) {
+func Loader(sourceConfigUri string) ([]KubeitFileResource, LoaderMeta, error, map[string][]error) {
 	sourceScheme, source, err := utils.SourceConfigUriParser(sourceConfigUri)
+
+	loaderMeta := LoaderMeta{
+		Source: source,
+		Scheme: sourceScheme,
+	}
+
 	if err != nil {
-		return nil, err, nil
+		return nil, loaderMeta, err, nil
 	}
 
 	logger.Infof("Loading Kubeit resources from %s", sourceConfigUri)
@@ -393,18 +399,18 @@ func Loader(sourceConfigUri string) ([]KubeitFileResource, error, map[string][]e
 	} else if sourceScheme == "docker" {
 		kubeitFileResources, loadErrs = loadKubeitResourcesFromDockerImage(source)
 	} else {
-		return nil, fmt.Errorf("unsupported source config URI scheme: %s", sourceScheme), nil
+		return nil, loaderMeta, fmt.Errorf("unsupported source config URI scheme: %s", sourceScheme), nil
 	}
 
 	if len(loadErrs) != 0 {
 		errMsg := fmt.Sprintf("%d files have errors while loading Kubeit resources", len(loadErrs))
 		logger.Error(errMsg)
-		return nil, fmt.Errorf("%v", errMsg), loadErrs
+		return nil, loaderMeta, fmt.Errorf("%v", errMsg), loadErrs
 	}
 
 	resourceCount := len(kubeitFileResources)
 	if resourceCount == 0 {
-		return nil, fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri), nil
+		return nil, loaderMeta, fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri), nil
 	} else {
 		kindCounts := CountResources(kubeitFileResources)
 		for kind, count := range kindCounts {
@@ -418,5 +424,5 @@ func Loader(sourceConfigUri string) ([]KubeitFileResource, error, map[string][]e
 		logger.Debugf("Found resource Kind: %s, API Version: %s in file: %s", kubeitFileResource.APIMetadata.Kind, kubeitFileResource.APIMetadata.APIVersion, kubeitFileResource.FileName)
 	}
 
-	return kubeitFileResources, nil, nil
+	return kubeitFileResources, loaderMeta, nil, nil
 }
