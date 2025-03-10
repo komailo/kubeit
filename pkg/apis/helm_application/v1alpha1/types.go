@@ -21,8 +21,9 @@ type Metadata struct {
 }
 
 type Spec struct {
-	Chart     Chart `json:"chart" yaml:"chart" validate:"required"`
-	RawValues any   `json:"rawValues,omitempty" yaml:"rawValues,omitempty"`
+	Chart         Chart         `json:"chart" yaml:"chart" validate:"required"`
+	RawValues     any           `json:"rawValues,omitempty" yaml:"rawValues,omitempty"`
+	ValueMappings ValueMappings `json:"valueMappings,omitempty" yaml:"valueMappings,omitempty"`
 }
 
 type Chart struct {
@@ -32,6 +33,12 @@ type Chart struct {
 	Version     string `json:"version" yaml:"version" validate:"required"`
 	ReleaseName string `json:"releaseName" yaml:"releaseName" validate:"required"`
 	Namespace   string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
+}
+
+type ValueMappings struct {
+	DockerImageRepository string `json:"dockerImageRepository,omitempty" yaml:"dockerImageRepository,omitempty"`
+	DockerImageTag        string `json:"dockerImageTag,omitempty" yaml:"dockerImageTag,omitempty"`
+	KubeitVersion         string `json:"kubeitVersion,omitempty" yaml:"kubeitVersion,omitempty"`
 }
 
 // Method to get the API metadata
