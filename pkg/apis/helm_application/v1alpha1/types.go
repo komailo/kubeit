@@ -21,9 +21,9 @@ type Metadata struct {
 }
 
 type Spec struct {
-	Chart                 Chart             `json:"chart" validate:"required"`
-	RawValues             any               `json:"rawValues,omitempty"`
-	GenerateValueMappings map[string]string `json:"generateValueMappings,omitempty"`
+	Chart                 Chart                 `json:"chart" validate:"required"`
+	RawValues             any                   `json:"rawValues,omitempty"`
+	GenerateValueMappings GenerateValueMappings `json:"generateValueMappings,omitempty"`
 }
 
 type Chart struct {
@@ -34,6 +34,8 @@ type Chart struct {
 	ReleaseName string `json:"releaseName"`
 	Namespace   string `json:"namespace,omitempty"`
 }
+
+type GenerateValueMappings map[string]string
 
 // Method to get the API metadata
 func (c *HelmApplication) GetAPIMetadata() k8smetav1.TypeMeta {
