@@ -21,9 +21,9 @@ type Metadata struct {
 }
 
 type Spec struct {
-	Chart                 Chart `json:"chart" validate:"required"`
-	RawValues             any   `json:"rawValues,omitempty"`
-	GenerateValueMappings any   `json:"generateValueMappings,omitempty"`
+	Chart                 Chart             `json:"chart" validate:"required"`
+	RawValues             any               `json:"rawValues,omitempty"`
+	GenerateValueMappings map[string]string `json:"generateValueMappings,omitempty"`
 }
 
 type Chart struct {

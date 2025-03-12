@@ -6,19 +6,21 @@ import (
 	"path/filepath"
 
 	"github.com/komailo/kubeit/internal/logger"
+	"github.com/komailo/kubeit/pkg/apis"
 	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/chartutil"
 	"helm.sh/helm/v3/pkg/cli"
+	helmCliValues "helm.sh/helm/v3/pkg/cli/values"
 	"helm.sh/helm/v3/pkg/registry"
 )
 
-func GenerateManifestFromHelm(HelmApplication helmappv1alpha1.HelmApplication, generateSetOptions *GenerateOptions) error {
+func GenerateManifestFromHelm(HelmApplication helmappv1alpha1.HelmApplication, loaderMeta *apis.LoaderMeta, generateSetOptions *GenerateOptions) error {
 	name := HelmApplication.Spec.Chart.Name
 	releaseName := HelmApplication.Spec.Chart.ReleaseName
 	namespace := HelmApplication.Spec.Chart.Namespace
-	version := HelmApplication.Spec.Chart.Version
+	chartVersion := HelmApplication.Spec.Chart.Version
 	repository := HelmApplication.Spec.Chart.Repository
 	url := HelmApplication.Spec.Chart.URL
 	kubeVersion := generateSetOptions.KubeVersion
@@ -37,7 +39,7 @@ func GenerateManifestFromHelm(HelmApplication helmappv1alpha1.HelmApplication, g
 		repository,
 		name,
 		url,
-		version,
+		chartVersion,
 		generateSetOptions,
 	)
 
@@ -49,8 +51,34 @@ func GenerateManifestFromHelm(HelmApplication helmappv1alpha1.HelmApplication, g
 		logger.Fatalf("Failed to load Helm chart: %v", err)
 	}
 
-	// Prepare values and render templates
-	values := chartutil.CoalesceTables(chart.Values, rawValues.(map[string]any))
+	helmCliValuesOptions := helmCliValues.Options{
+		ValueFiles:    []string{},
+		StringValues:  []string{},
+		Values:        []string{},
+		FileValues:    []string{},
+		JSONValues:    []string{},
+		LiteralValues: []string{},
+	}
+
+	// iterate over HelmApplication.Spec.GenerateValueMappings and add them to
+	// helmCliValuesOptions.Values
+	for key, value := range HelmApplication.Spec.GenerateValueMappings {
+		logger.Infof("key: %s, value: %s", key, value)
+		helmCliValuesOptions.Values = append(helmCliValuesOptions.Values, fmt.Sprintf("%s=%s", key, value))
+	}
+
+	if loaderMeta.Scheme == "docker" {
+	}
+
+	mergedValues, err := helmCliValuesOptions.MergeValues(nil)
+	if err != nil {
+		return fmt.Errorf("unable to merge Helm values: %s", err)
+	}
+
+	// chartValues := chartutil.CoalesceTables(chart.Values, rawValues.(map[string]any))
+	chartValues := chartutil.CoalesceTables(mergedValues, rawValues.(map[string]any))
+	fmt.Printf("chartValues: %v\n", chartValues)
+
 	installClient := action.NewInstall(actionConfig)
 	installClient.DryRun = true
 	installClient.ReleaseName = releaseName
@@ -64,7 +92,7 @@ func GenerateManifestFromHelm(HelmApplication helmappv1alpha1.HelmApplication, g
 		}
 		installClient.KubeVersion = parsedKubeVersion
 	}
-	release, err := installClient.Run(chart, values)
+	release, err := installClient.Run(chart, chartValues)
 	if err != nil {
 		logger.Fatalf("Failed to render templates: %v", err)
 	}

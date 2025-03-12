@@ -17,10 +17,10 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func GenerateManifests(generateSetOptions *GenerateOptions, sourceConfigUri string) ([]error, map[string][]error) {
-
+func GenerateManifests(generateSetOptions *GenerateOptions) ([]error, map[string][]error) {
+	sourceConfigUri := generateSetOptions.SourceConfigUri
 	logger.Infof("Generating manifests from %s", sourceConfigUri)
-	var kubeitFileResources, _, loaderErrs, fileLoadErrs = apis.Loader(sourceConfigUri)
+	var kubeitFileResources, loaderMeta, loaderErrs, fileLoadErrs = apis.Loader(sourceConfigUri)
 
 	if loaderErrs != nil {
 		return []error{loaderErrs}, fileLoadErrs
@@ -33,7 +33,7 @@ func GenerateManifests(generateSetOptions *GenerateOptions, sourceConfigUri stri
 		apis.LogResources(kubeitFileResources)
 	}
 
-	generateErrs := generateHelmTemplates(kubeitFileResources, generateSetOptions)
+	generateErrs := generateHelmTemplates(kubeitFileResources, loaderMeta, generateSetOptions)
 	if generateErrs != nil {
 		return generateErrs, nil
 	}

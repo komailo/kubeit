@@ -99,6 +99,11 @@ func loadKubeitResource(data []byte) (KubeitResource, error) {
 		return nil, fmt.Errorf("failed to assert resource as KubeitResource, got: %T", resourceInstance)
 	}
 
+	validateErr := res.Validate()
+	if validateErr != nil {
+		return nil, fmt.Errorf("resource validation error: %w", validateErr)
+	}
+
 	return res, nil
 }
 
