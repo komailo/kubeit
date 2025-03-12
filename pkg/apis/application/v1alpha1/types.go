@@ -8,13 +8,13 @@ const GroupVersion = "kubeit.komailo.github.io/v1alpha1"
 const Kind = "Application"
 
 type Application struct {
-	Metadata Metadata `json:"metadata" yaml:"metadata"`
-	Spec     any      `json:"spec" yaml:"spec"`
+	Metadata Metadata `json:"metadata"`
+	Spec     any      `json:"spec"`
 	k8smetav1.TypeMeta
 }
 
 type Metadata struct {
-	Name string `json:"name" yaml:"name" validate:"required"`
+	Name string `json:"name" validate:"required"`
 }
 
 // Method to get the API metadata

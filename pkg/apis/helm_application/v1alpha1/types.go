@@ -11,34 +11,28 @@ const GroupVersion = common.APIVersionV1Alpha1
 const Kind = "HelmApplication"
 
 type HelmApplication struct {
-	k8smetav1.TypeMeta `json:",inline" yaml:",inline"`
-	Metadata           Metadata `json:"metadata,omitempty" yaml:"metadata,omitempty"`
-	Spec               Spec     `json:"spec" yaml:"spec,omitempty"`
+	k8smetav1.TypeMeta `json:",inline"`
+	Metadata           Metadata `json:"metadata,omitempty"`
+	Spec               Spec     `json:"spec"`
 }
 
 type Metadata struct {
-	Name string `json:"name" yaml:"name" validate:"required"`
+	Name string `json:"name" validate:"required"`
 }
 
 type Spec struct {
-	Chart         Chart         `json:"chart" yaml:"chart" validate:"required"`
-	RawValues     any           `json:"rawValues,omitempty" yaml:"rawValues,omitempty"`
-	ValueMappings ValueMappings `json:"valueMappings,omitempty" yaml:"valueMappings,omitempty"`
+	Chart                 Chart `json:"chart" validate:"required"`
+	RawValues             any   `json:"rawValues,omitempty"`
+	GenerateValueMappings any   `json:"generateValueMappings,omitempty"`
 }
 
 type Chart struct {
-	Repository  string `json:"repository,omitempty" yaml:"repository,omitempty"`
-	Name        string `json:"name,omitempty" yaml:"name,omitempty"`
-	URL         string `json:"url,omitempty" yaml:"url,omitempty"`
-	Version     string `json:"version" yaml:"version" validate:"required"`
-	ReleaseName string `json:"releaseName" yaml:"releaseName" validate:"required"`
-	Namespace   string `json:"namespace,omitempty" yaml:"namespace,omitempty"`
-}
-
-type ValueMappings struct {
-	DockerImageRepository string `json:"dockerImageRepository,omitempty" yaml:"dockerImageRepository,omitempty"`
-	DockerImageTag        string `json:"dockerImageTag,omitempty" yaml:"dockerImageTag,omitempty"`
-	KubeitVersion         string `json:"kubeitVersion,omitempty" yaml:"kubeitVersion,omitempty"`
+	Repository  string `json:"repository,omitempty"`
+	Name        string `json:"name,omitempty"`
+	URL         string `json:"url,omitempty"`
+	Version     string `json:"version"`
+	ReleaseName string `json:"releaseName"`
+	Namespace   string `json:"namespace,omitempty"`
 }
 
 // Method to get the API metadata
