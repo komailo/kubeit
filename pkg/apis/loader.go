@@ -6,7 +6,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -20,9 +19,7 @@ import (
 	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
 	"github.com/komailo/kubeit/pkg/utils"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
-
-	"gopkg.in/yaml.v3"
+	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 // TypeRegistry holds mappings of Kind -> APIVersion -> Struct Type
@@ -38,14 +35,10 @@ var TypeRegistry = map[string]map[string]reflect.Type{
 }
 
 // loadKubeitResource dynamically loads the correct struct based on the provided single
-// YAML document.
+// JSON document.
 // It extracts the API metadata (apiVersion and kind) to determine the appropriate
-// struct type,
-// unmarshals the data into the struct, validates it, and ensures it implements the
-// KubeitResource interface.
-//
-// This function is used by LoadKubeitResources to process individual YAML documents.
-// It is safe to use LoadKubeitResources even if you have a single YAML document.
+// struct type, unmarshals the data into the struct, validates it, and ensures it
+// implements the KubeitResource interface.
 //
 // Parameters:
 //   - data: A byte slice containing the YAML data to be processed.
@@ -55,22 +48,17 @@ var TypeRegistry = map[string]map[string]reflect.Type{
 //   - error: An error encountered during the process, or nil if no error occurred.
 //
 // The function performs the following steps:
-//  1. Extracts the API metadata (apiVersion and kind) from the YAML data.
+//  1. Extracts the API metadata (apiVersion and kind) from the JSON data.
 //  2. Looks up the appropriate struct type based on the extracted metadata.
-//  3. Creates a new instance of the struct and unmarshals the YAML data into it.
+//  3. Creates a new instance of the struct and unmarshals the JSON data into it.
 //  4. Validates the unmarshaled struct using the go-playground/validator library.
 //  5. Ensures the struct implements the KubeitResource interface.
-//  6. Sets the TypeMeta field of the struct using the extracted metadata.
 func loadKubeitResource(data []byte) (KubeitResource, error) {
-	// Convert YAML to JSON first if it's YAML
-	data, err := k8syaml.ToJSON(data)
-	if err != nil {
-		return nil, fmt.Errorf("invalid data unable to render to json: %w", err)
-	}
-
 	var metaOnly k8smetav1.TypeMeta
 
-	if err := json.Unmarshal(data, &metaOnly); err != nil {
+	metaDecoder := json.NewDecoder(bytes.NewReader(data))
+
+	if err := metaDecoder.Decode(&metaOnly); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal JSON on to type meta: %w", err)
 	}
 
@@ -91,8 +79,11 @@ func loadKubeitResource(data []byte) (KubeitResource, error) {
 	// Create a new instance of the resource
 	resourceInstance := reflect.New(resourceType.Elem()).Interface()
 
-	// Unmarshal JSON into the correct struct
-	if err := json.Unmarshal(data, resourceInstance); err != nil {
+	// Use JSON decoder again with DisallowUnknownFields
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(resourceInstance); err != nil {
 		return nil, fmt.Errorf("failed to parse resource: %w", err)
 	}
 
@@ -108,18 +99,13 @@ func loadKubeitResource(data []byte) (KubeitResource, error) {
 		return nil, fmt.Errorf("failed to assert resource as KubeitResource, got: %T", resourceInstance)
 	}
 
-	// Set TypeMeta using the new interface method
-	res.SetAPIMetadata(k8smetav1.TypeMeta{
-		APIVersion: metaOnly.APIVersion,
-		Kind:       metaOnly.Kind,
-	})
-
 	return res, nil
 }
 
-// loadKubeitResources loads Kubeit resources from a byte slice containing YAML data.
-// It supports multi-document YAML files and processes each document to extract Kubeit
-// resources.
+// loadKubeitResources loads Kubeit resources from a byte slice containing YAML or JSON
+// data.
+// It supports multi-document YAML and JSON files and processes each document to extract
+// Kubeit resources.
 //
 // Parameters:
 //   - data: A byte slice containing the YAML data to be processed.
@@ -137,29 +123,21 @@ func loadKubeitResources(data []byte) ([]KubeitResource, []error) {
 	var resources []KubeitResource
 	var errors []error
 
-	decoder := yaml.NewDecoder(bytes.NewReader(data))
+	decoder := yaml.NewYAMLOrJSONDecoder(bytes.NewReader(data), 4096)
 	for {
-		var rawDoc map[string]interface{}
-		if err := decoder.Decode(&rawDoc); err != nil {
-			if err == io.EOF {
-				break // End of YAML documents
-			}
-			errors = append(errors, fmt.Errorf("failed to decode YAML document: %w", err))
-			break
+		var rawMessage json.RawMessage
+		if err := decoder.Decode(&rawMessage); err != nil {
+			break // End of input
 		}
 
-		// Marshal the individual document back into YAML for processing
-		yamlData, _ := yaml.Marshal(rawDoc)
-		resource, err := loadKubeitResource(yamlData)
+		resource, err := loadKubeitResource(rawMessage)
 		if err != nil {
 			errors = append(errors, fmt.Errorf("failed to load resource: %w", err))
 			continue
 		}
-
 		resources = append(resources, resource)
 	}
-
-	return resources, errors
+	return resources, nil
 }
 
 // loadKubeitResourcesFromDir loads all Kubeit resources from a specified directory,
