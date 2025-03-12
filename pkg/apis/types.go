@@ -6,8 +6,8 @@ import (
 
 // the base type that all Kubeit resources must implement
 type KubeitResource interface {
+	Validate() error
 	GetAPIMetadata() k8smetav1.TypeMeta
-	SetAPIMetadata(meta k8smetav1.TypeMeta)
 }
 
 // KubeitFileResource is a struct that holds a kubeit resources

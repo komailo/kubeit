@@ -40,11 +40,6 @@ func (h *HelmApplication) GetAPIMetadata() k8smetav1.TypeMeta {
 	return h.TypeMeta
 }
 
-// Method to set the API metadata
-func (h *HelmApplication) SetAPIMetadata(meta k8smetav1.TypeMeta) {
-	h.TypeMeta = meta
-}
-
 // Custom validation function for HelmApplication
 func (c *HelmApplication) Validate() error {
 	if c.Spec.Chart.URL == "" && (c.Spec.Chart.Repository == "" || c.Spec.Chart.Name == "") {

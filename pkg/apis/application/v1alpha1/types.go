@@ -22,11 +22,6 @@ func (h *Application) GetAPIMetadata() k8smetav1.TypeMeta {
 	return h.TypeMeta
 }
 
-// Method to set the API metadata
-func (h *Application) SetAPIMetadata(meta k8smetav1.TypeMeta) {
-	h.TypeMeta = meta
-}
-
 // Custom validation function for Application
 func (c *Application) Validate() error {
 	return nil
