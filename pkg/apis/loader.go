@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -19,6 +20,7 @@ import (
 	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
 	"github.com/komailo/kubeit/pkg/utils"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	k8syaml "k8s.io/apimachinery/pkg/util/yaml"
 
 	"gopkg.in/yaml.v3"
 )
@@ -60,14 +62,16 @@ var TypeRegistry = map[string]map[string]reflect.Type{
 //  5. Ensures the struct implements the KubeitResource interface.
 //  6. Sets the TypeMeta field of the struct using the extracted metadata.
 func loadKubeitResource(data []byte) (KubeitResource, error) {
-	var metaOnly struct {
-		APIVersion string `json:"apiVersion" yaml:"apiVersion"`
-		Kind       string `json:"kind" yaml:"kind"`
+	// Convert YAML to JSON first if it's YAML
+	data, err := k8syaml.ToJSON(data)
+	if err != nil {
+		return nil, fmt.Errorf("invalid data unable to render to json: %w", err)
 	}
 
-	// Extract API metadata first
-	if err := yaml.Unmarshal(data, &metaOnly); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal file: %w", err)
+	var metaOnly k8smetav1.TypeMeta
+
+	if err := json.Unmarshal(data, &metaOnly); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal JSON on to type meta: %w", err)
 	}
 
 	if metaOnly.APIVersion == "" || metaOnly.Kind == "" {
@@ -87,8 +91,8 @@ func loadKubeitResource(data []byte) (KubeitResource, error) {
 	// Create a new instance of the resource
 	resourceInstance := reflect.New(resourceType.Elem()).Interface()
 
-	// Unmarshal data into the correct struct
-	if err := yaml.Unmarshal(data, resourceInstance); err != nil {
+	// Unmarshal JSON into the correct struct
+	if err := json.Unmarshal(data, resourceInstance); err != nil {
 		return nil, fmt.Errorf("failed to parse resource: %w", err)
 	}
 
@@ -404,6 +408,7 @@ func Loader(sourceConfigUri string) ([]KubeitFileResource, LoaderMeta, error, ma
 
 	if len(loadErrs) != 0 {
 		errMsg := fmt.Sprintf("%d files have errors while loading Kubeit resources", len(loadErrs))
+		logger.Error(loadErrs)
 		logger.Error(errMsg)
 		return nil, loaderMeta, fmt.Errorf("%v", errMsg), loadErrs
 	}
@@ -411,17 +416,6 @@ func Loader(sourceConfigUri string) ([]KubeitFileResource, LoaderMeta, error, ma
 	resourceCount := len(kubeitFileResources)
 	if resourceCount == 0 {
 		return nil, loaderMeta, fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri), nil
-	} else {
-		kindCounts := CountResources(kubeitFileResources)
-		for kind, count := range kindCounts {
-			logger.Infof("%s: %d", kind, count)
-		}
-
-		logger.Infof("Found %d Kubeit resources", resourceCount)
-	}
-
-	for _, kubeitFileResource := range kubeitFileResources {
-		logger.Debugf("Found resource Kind: %s, API Version: %s in file: %s", kubeitFileResource.APIMetadata.Kind, kubeitFileResource.APIMetadata.APIVersion, kubeitFileResource.FileName)
 	}
 
 	return kubeitFileResources, loaderMeta, nil, nil
