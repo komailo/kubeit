@@ -36,8 +36,8 @@ type Chart struct {
 }
 
 // Method to get the API metadata
-func (h *HelmApplication) GetAPIMetadata() k8smetav1.TypeMeta {
-	return h.TypeMeta
+func (c *HelmApplication) GetAPIMetadata() k8smetav1.TypeMeta {
+	return c.TypeMeta
 }
 
 // Custom validation function for HelmApplication
