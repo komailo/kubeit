@@ -2,38 +2,9 @@ package utils
 
 import (
 	"fmt"
-	"net/url"
-	"os"
-	"path/filepath"
-	"strings"
 
-	"github.com/komailo/kubeit/internal/logger"
+	"github.com/distribution/reference"
 )
-
-// Given the sourceConfigUri, parse it and return a valid url.URL
-func ParseSourceConfigURI(sourceConfigUri string) (url.URL, error) {
-	parsedURL, err := url.Parse(sourceConfigUri)
-	if err != nil || parsedURL.Scheme == "" {
-		return url.URL{}, fmt.Errorf("source config uri '%s' is invalid", sourceConfigUri)
-	}
-
-	if parsedURL.Path == "" {
-		return url.URL{}, fmt.Errorf(
-			"Incomplete source config uri '%s'. Expected format: <scheme>://<path>",
-			sourceConfigUri,
-		)
-	}
-
-	validSchemes := []string{"file"}
-	if !Contains(validSchemes, parsedURL.Scheme) {
-		return url.URL{}, fmt.Errorf(
-			"source scheme %s is invalid in '%s'. Valid sources: %s",
-			parsedURL.Scheme, sourceConfigUri, strings.Join(validSchemes, ", "),
-		)
-	}
-
-	return *parsedURL, nil
-}
 
 // contains checks if a string is in a slice of strings
 func Contains(slice []string, item string) bool {
@@ -45,17 +16,23 @@ func Contains(slice []string, item string) bool {
 	return false
 }
 
-func UriIsFile(uri string) (bool, string) {
-	_, err := os.Stat(uri)
-	if err == nil {
-		logger.Debugf("File %s found so URI does look like a file", uri)
-		absPath, err := filepath.Abs(uri)
-		if err != nil {
-			logger.Warnf("Failed to get absolute path for file %s", uri)
-			return false, ""
-		}
-		return true, fmt.Sprintf("file://%s", absPath)
+// ParseDockerImage parses a Docker image string and returns the repository and tag
+// values.
+func ParseDockerImage(image string) (string, string, error) {
+	// Parse the Docker image reference
+	ref, err := reference.ParseNormalizedNamed(image)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to parse Docker image reference: %w", err)
 	}
-	logger.Debugf("File %s not found so URI does not look like a file", uri)
-	return false, ""
+
+	// Get the repository name
+	repo := ref.Name()
+
+	// Get the tag (if any)
+	var tag string
+	if tagged, ok := ref.(reference.Tagged); ok {
+		tag = tagged.Tag()
+	}
+
+	return repo, tag, nil
 }
