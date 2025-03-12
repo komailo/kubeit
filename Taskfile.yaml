@@ -5,7 +5,9 @@ tasks:
     desc: "Build the Go project"
     deps:
       - go-mod-tidy
-      - go-releaser-local
+      # - go-releaser-local
+    cmds:
+      - go build -o build/kubeit .
 
   fmt:
     desc: "Format Go code"
@@ -53,6 +55,15 @@ tasks:
       - build/kubeit generate manifest ./examples/kubeit-helm-oci/
       - build/kubeit generate manifest foo:latest
       - build/kubeit generate manifest docker://foo:latest
+
+  int-test:
+    desc: "Run integration test"
+    cmds:
+      - docker build $(task run -- generate docker-labels ./examples/kubeit-helm) -t foo ./examples
+      - task run -- generate manifest file://$(pwd)/examples/kubeit-helm/
+      - task run -- generate manifest ./examples/kubeit-helm-oci/
+      - task run -- generate manifest foo:latest
+      - task run -- generate manifest docker://foo:latest
 
   ## Go related operations
   go-mod-tidy:
