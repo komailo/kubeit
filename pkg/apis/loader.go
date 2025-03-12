@@ -239,7 +239,13 @@ func loadKubeitResourcesFromDockerImage(imageRef string) ([]KubeitFileResource, 
 	var resources []KubeitFileResource
 	errors := make(map[string][]error)
 
-	if exists, err := utils.CheckDockerImageExists(imageRef); !exists || err != nil {
+	dockerClientInstance, err := utils.NewRealDockerClient()
+	if err != nil {
+		errors[imageRef] = append(errors[imageRef], fmt.Errorf("failed to create Docker client: %w", err))
+		return nil, errors
+	}
+
+	if exists, err := utils.CheckDockerImageExists(dockerClientInstance, imageRef); !exists || err != nil {
 		errors[imageRef] = append(errors[imageRef], fmt.Errorf("failed to find image: %w", err))
 		return nil, errors
 	}
