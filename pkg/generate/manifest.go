@@ -21,7 +21,7 @@ func GenerateManifestFromHelm(HelmApplication helmappv1alpha1.HelmApplication, g
 	version := HelmApplication.Spec.Chart.Version
 	repository := HelmApplication.Spec.Chart.Repository
 	url := HelmApplication.Spec.Chart.URL
-	kubeVersion := "1.21.0"
+	kubeVersion := generateSetOptions.KubeVersion
 	rawValues := HelmApplication.Spec.RawValues
 
 	// Initialize Helm environment

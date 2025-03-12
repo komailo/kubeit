@@ -1,10 +1,9 @@
 package commands
 
 import (
+	_ "embed"
 	"fmt"
 	"runtime/debug"
-
-	_ "embed" // Ensure the embed package is imported
 
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/internal/version"

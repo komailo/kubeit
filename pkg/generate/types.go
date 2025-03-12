@@ -3,8 +3,10 @@ package generate
 import "github.com/komailo/kubeit/common"
 
 type GenerateOptions struct {
-	OutputDir string
-	WorkDir   string
+	OutputDir       string
+	WorkDir         string
+	SourceConfigUri string
+	KubeVersion     string
 }
 
 type ManifestSource struct {
