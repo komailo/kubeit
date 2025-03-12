@@ -28,7 +28,9 @@ func GenerateManifests(generateSetOptions *GenerateOptions) ([]error, map[string
 
 	resourceCount := len(kubeitFileResources)
 	if resourceCount == 0 {
-		return []error{fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri)}, nil
+		return []error{
+			fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri),
+		}, nil
 	} else {
 		apis.LogResources(kubeitFileResources)
 	}
@@ -41,7 +43,10 @@ func GenerateManifests(generateSetOptions *GenerateOptions) ([]error, map[string
 
 }
 
-func GenerateDockerLabels(generateSetOptions *GenerateOptions, sourceConfigUri string) ([]error, map[string][]error) {
+func GenerateDockerLabels(
+	generateSetOptions *GenerateOptions,
+	sourceConfigUri string,
+) ([]error, map[string][]error) {
 	logger.Infof("Generating Docker Labels from %s", sourceConfigUri)
 
 	kubeitFileResources, _, loaderErrs, fileLoadErrs := apis.Loader(sourceConfigUri)
@@ -52,7 +57,9 @@ func GenerateDockerLabels(generateSetOptions *GenerateOptions, sourceConfigUri s
 
 	resourceCount := len(kubeitFileResources)
 	if resourceCount == 0 {
-		return []error{fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri)}, nil
+		return []error{
+			fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri),
+		}, nil
 	} else {
 		apis.LogResources(kubeitFileResources)
 	}

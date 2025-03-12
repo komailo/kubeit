@@ -96,7 +96,10 @@ func loadKubeitResource(data []byte) (KubeitResource, error) {
 	// Ensure resourceInstance implements KubeitResource
 	res, ok := resourceInstance.(KubeitResource)
 	if !ok {
-		return nil, fmt.Errorf("failed to assert resource as KubeitResource, got: %T", resourceInstance)
+		return nil, fmt.Errorf(
+			"failed to assert resource as KubeitResource, got: %T",
+			resourceInstance,
+		)
 	}
 
 	validateErr := res.Validate()
@@ -187,7 +190,8 @@ func loadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]
 
 		// Skip directories at the root level that start with a dot
 		if info.IsDir() {
-			if strings.HasPrefix(info.Name(), ".") && filepath.Dir(filePath) == filepath.Clean(dir) {
+			if strings.HasPrefix(info.Name(), ".") &&
+				filepath.Dir(filePath) == filepath.Clean(dir) {
 				logger.Debugf("Skiping root directory to load Kubeit resources from: %s", filePath)
 				return filepath.SkipDir
 			} else {
@@ -221,7 +225,10 @@ func loadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]
 	})
 
 	if err != nil {
-		errors[absDirPath] = append(errors[absDirPath], fmt.Errorf("failed to walk directory: %w", err))
+		errors[absDirPath] = append(
+			errors[absDirPath],
+			fmt.Errorf("failed to walk directory: %w", err),
+		)
 	}
 
 	return resources, errors
@@ -240,30 +247,42 @@ func loadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]
 //     Docker image labels.
 //   - map[string][]error: A map where the keys are image references and the values are
 //     slices of errors encountered while processing the image.
-func loadKubeitResourcesFromDockerImage(imageRef string) ([]KubeitFileResource, map[string][]error) {
+func loadKubeitResourcesFromDockerImage(
+	imageRef string,
+) ([]KubeitFileResource, map[string][]error) {
 	var resources []KubeitFileResource
 	errors := make(map[string][]error)
 
 	dockerClientInstance, err := utils.NewRealDockerClient()
 	if err != nil {
-		errors[imageRef] = append(errors[imageRef], fmt.Errorf("failed to create Docker client: %w", err))
+		errors[imageRef] = append(
+			errors[imageRef],
+			fmt.Errorf("failed to create Docker client: %w", err),
+		)
 		return nil, errors
 	}
 
-	if exists, err := utils.CheckDockerImageExists(dockerClientInstance, imageRef); !exists || err != nil {
+	if exists, err := utils.CheckDockerImageExists(dockerClientInstance, imageRef); !exists ||
+		err != nil {
 		errors[imageRef] = append(errors[imageRef], fmt.Errorf("failed to find image: %w", err))
 		return nil, errors
 	}
 
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		errors[imageRef] = append(errors[imageRef], fmt.Errorf("failed to create Docker client: %w", err))
+		errors[imageRef] = append(
+			errors[imageRef],
+			fmt.Errorf("failed to create Docker client: %w", err),
+		)
 		return nil, errors
 	}
 
 	imageInspect, err := cli.ImageInspect(context.Background(), imageRef)
 	if err != nil {
-		errors[imageRef] = append(errors[imageRef], fmt.Errorf("failed to inspect Docker image: %w", err))
+		errors[imageRef] = append(
+			errors[imageRef],
+			fmt.Errorf("failed to inspect Docker image: %w", err),
+		)
 		return nil, errors
 	}
 
@@ -271,14 +290,20 @@ func loadKubeitResourcesFromDockerImage(imageRef string) ([]KubeitFileResource, 
 	labelKey := fmt.Sprintf(common.KubeitDomain + "/resources")
 	base64Resource, ok := imageInspect.Config.Labels[labelKey]
 	if !ok {
-		errors[imageRef] = append(errors[imageRef], fmt.Errorf("no Kubeit resources found in image: %s", imageRef))
+		errors[imageRef] = append(
+			errors[imageRef],
+			fmt.Errorf("no Kubeit resources found in image: %s", imageRef),
+		)
 		return nil, errors
 	}
 
 	// decode the base64 encoded resources
 	decodedResources, err := base64.StdEncoding.DecodeString(base64Resource)
 	if err != nil {
-		errors[imageRef] = append(errors[imageRef], fmt.Errorf("failed to decode base64 resources: %w", err))
+		errors[imageRef] = append(
+			errors[imageRef],
+			fmt.Errorf("failed to decode base64 resources: %w", err),
+		)
 		return nil, errors
 	}
 
@@ -343,7 +368,12 @@ func LogResources(kubeitFileResources []KubeitFileResource) {
 	}
 
 	for _, kubeitFileResource := range kubeitFileResources {
-		logger.Debugf("Found resource Kind: %s, API Version: %s in file: %s", kubeitFileResource.APIMetadata.Kind, kubeitFileResource.APIMetadata.APIVersion, kubeitFileResource.FileName)
+		logger.Debugf(
+			"Found resource Kind: %s, API Version: %s in file: %s",
+			kubeitFileResource.APIMetadata.Kind,
+			kubeitFileResource.APIMetadata.APIVersion,
+			kubeitFileResource.FileName,
+		)
 	}
 }
 
@@ -404,7 +434,10 @@ func Loader(sourceConfigUri string) ([]KubeitFileResource, LoaderMeta, error, ma
 
 	resourceCount := len(kubeitFileResources)
 	if resourceCount == 0 {
-		return nil, loaderMeta, fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri), nil
+		return nil, loaderMeta, fmt.Errorf(
+			"no Kubeit resources found when traversing: %s",
+			sourceConfigUri,
+		), nil
 	}
 
 	return kubeitFileResources, loaderMeta, nil, nil

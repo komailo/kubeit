@@ -28,7 +28,10 @@ func NewRealDockerClient() (*RealDockerClient, error) {
 }
 
 // ImageInspect implements DockerClientInterface
-func (r *RealDockerClient) ImageInspect(ctx context.Context, imageRef string) (image.InspectResponse, error) {
+func (r *RealDockerClient) ImageInspect(
+	ctx context.Context,
+	imageRef string,
+) (image.InspectResponse, error) {
 	return r.client.ImageInspect(ctx, imageRef)
 }
 

@@ -16,7 +16,13 @@ func TestParseDockerImage(t *testing.T) {
 	}{
 		{"Valid image with tag", "alpine:latest", "docker.io/library/alpine", "latest", false},
 		{"Valid image without tag", "ubuntu", "docker.io/library/ubuntu", "", false},
-		{"Valid image with tag and full repo", "mytestrepo.io:5000/test:hello", "mytestrepo.io:5000/test", "hello", false},
+		{
+			"Valid image with tag and full repo",
+			"mytestrepo.io:5000/test:hello",
+			"mytestrepo.io:5000/test",
+			"hello",
+			false,
+		},
 		{"Invalid image", "!!invalid!!", "", "", true},
 	}
 
@@ -24,7 +30,12 @@ func TestParseDockerImage(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			repo, tag, err := ParseDockerImage(tt.input)
 			if (err != nil) != tt.wantError {
-				t.Errorf("ParseDockerImage(%q) error = %v, wantError %v", tt.input, err, tt.wantError)
+				t.Errorf(
+					"ParseDockerImage(%q) error = %v, wantError %v",
+					tt.input,
+					err,
+					tt.wantError,
+				)
 			}
 			if repo != tt.expectRepo {
 				t.Errorf("ParseDockerImage(%q) repo = %q, want %q", tt.input, repo, tt.expectRepo)

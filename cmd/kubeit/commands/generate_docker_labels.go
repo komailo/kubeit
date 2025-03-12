@@ -16,7 +16,10 @@ var GenerateDockerLabelsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		sourceConfigUri := args[0]
 
-		generateErrs, loadFileErrs := generate.GenerateDockerLabels(&generateSetOptions, sourceConfigUri)
+		generateErrs, loadFileErrs := generate.GenerateDockerLabels(
+			&generateSetOptions,
+			sourceConfigUri,
+		)
 
 		errorMap := make(map[string][]string) // Map to store errors per file
 		if len(loadFileErrs) != 0 {
@@ -28,7 +31,10 @@ var GenerateDockerLabelsCmd = &cobra.Command{
 		}
 
 		for _, err := range generateErrs {
-			errorMap["Generate Errors"] = append(errorMap["Generate Errors"], fmt.Sprintf("- %v", err))
+			errorMap["Generate Errors"] = append(
+				errorMap["Generate Errors"],
+				fmt.Sprintf("- %v", err),
+			)
 		}
 
 		// If there are errors, format them nicely

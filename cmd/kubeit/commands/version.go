@@ -61,6 +61,7 @@ var VersionCmd = &cobra.Command{
 }
 
 func init() {
-	VersionCmd.PersistentFlags().BoolVar(&showLicense, licenseFlag, false, "Print the license information")
+	VersionCmd.PersistentFlags().
+		BoolVar(&showLicense, licenseFlag, false, "Print the license information")
 
 }

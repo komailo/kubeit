@@ -29,7 +29,10 @@ var GenerateManifestCmd = &cobra.Command{
 		}
 
 		for _, err := range generateErrs {
-			errorMap["Generate Errors"] = append(errorMap["Generate Errors"], fmt.Sprintf("- %v", err))
+			errorMap["Generate Errors"] = append(
+				errorMap["Generate Errors"],
+				fmt.Sprintf("- %v", err),
+			)
 		}
 
 		// If there are errors, format them nicely
