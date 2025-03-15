@@ -15,7 +15,7 @@ var GenerateManifestCmd = &cobra.Command{
 	Short: "Generate Kubernetes manifests from a Kubeit configuration",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		generateSetOptions.SourceConfigUri = args[0]
+		generateSetOptions.SourceConfigURI = args[0]
 
 		generateErrs, loadFileErrs := generate.GenerateManifests(&generateSetOptions)
 

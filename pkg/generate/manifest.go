@@ -1,6 +1,7 @@
 package generate
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -16,16 +17,16 @@ import (
 )
 
 func GenerateManifestFromHelm(
-	HelmApplication helmappv1alpha1.HelmApplication,
+	helmApplication helmappv1alpha1.HelmApplication,
 	loaderMeta *apis.LoaderMeta,
 	generateSetOptions *GenerateOptions,
 ) error {
-	name := HelmApplication.Spec.Chart.Name
-	releaseName := HelmApplication.Spec.Chart.ReleaseName
-	namespace := HelmApplication.Spec.Chart.Namespace
-	chartVersion := HelmApplication.Spec.Chart.Version
-	repository := HelmApplication.Spec.Chart.Repository
-	url := HelmApplication.Spec.Chart.URL
+	name := helmApplication.Spec.Chart.Name
+	releaseName := helmApplication.Spec.Chart.ReleaseName
+	namespace := helmApplication.Spec.Chart.Namespace
+	chartVersion := helmApplication.Spec.Chart.Version
+	repository := helmApplication.Spec.Chart.Repository
+	url := helmApplication.Spec.Chart.URL
 	kubeVersion := generateSetOptions.KubeVersion
 
 	// Initialize Helm environment
@@ -54,7 +55,7 @@ func GenerateManifestFromHelm(
 	}
 
 	helmCliValuesOptions, err := generateHelmValues(
-		HelmApplication.Spec.Values,
+		helmApplication.Spec.Values,
 		loaderMeta,
 		generateSetOptions,
 	)
@@ -64,7 +65,7 @@ func GenerateManifestFromHelm(
 
 	chartValues, err := helmCliValuesOptions.MergeValues(nil)
 	if err != nil {
-		return fmt.Errorf("unable to merge Helm values: %s", err)
+		return fmt.Errorf("unable to merge Helm values: %w", err)
 	}
 
 	installClient := action.NewInstall(actionConfig)
@@ -76,7 +77,7 @@ func GenerateManifestFromHelm(
 	if kubeVersion != "" {
 		parsedKubeVersion, err := chartutil.ParseKubeVersion(kubeVersion)
 		if err != nil {
-			return fmt.Errorf("invalid kube version '%s': %s", kubeVersion, err)
+			return fmt.Errorf("invalid kube version '%s': %w", kubeVersion, err)
 		}
 		installClient.KubeVersion = parsedKubeVersion
 	}
@@ -87,7 +88,7 @@ func GenerateManifestFromHelm(
 
 	// fail if manifest file is empty
 	if release.Manifest == "" {
-		return fmt.Errorf("No manifest file generated")
+		return errors.New("No manifest file generated")
 	}
 	// TODO: Add common labels and annotations to the manifest
 	// processedManifest, err := addCommonLabelsAndAnnotationsToK8sObject(release.Manifest)
@@ -126,29 +127,29 @@ func pullHelmChart(
 
 	destinationDir := filepath.Join(generateSetOptions.WorkDir, "charts")
 
-	// Delete the destiantion directory if it already exists
+	// Delete the destinations directory if it already exists
 	if _, err := os.Stat(destinationDir); err == nil {
 		if err := os.RemoveAll(destinationDir); err != nil {
-			return "", fmt.Errorf("Failed to remove destination directory: %v", err)
+			return "", fmt.Errorf("Failed to remove destination directory: %w", err)
 		}
 	}
 	// Create the destination directory
 	if err := os.MkdirAll(destinationDir, os.ModePerm); err != nil {
-		return "", fmt.Errorf("Failed to create destination directory: %v", err)
+		return "", fmt.Errorf("Failed to create destination directory: %w", err)
 	}
 
 	var chartRef string
-
-	if name == "" && repository == "" && url == "" {
-		return "", fmt.Errorf("either chart name and repository or url must be provided")
-	} else if name == "" && repository != "" {
-		return "", fmt.Errorf("chart name must be provided when using a repository")
-	} else if name != "" && repository == "" {
-		return "", fmt.Errorf("repository must be provided when using chart name")
-	} else if url != "" {
+	switch {
+	case name == "" && repository == "" && url == "":
+		return "", errors.New("either chart name and repository or url must be provided")
+	case name == "" && repository != "":
+		return "", errors.New("chart name must be provided when using a repository")
+	case name != "" && repository == "":
+		return "", errors.New("repository must be provided when using chart name")
+	case url != "":
 		logger.Infof("Pulling chart from %s", url)
 		chartRef = url
-	} else {
+	default:
 		logger.Infof("Pulling chart %s from %s", name, repository)
 		pullClient.RepoURL = repository
 		chartRef = name
@@ -158,7 +159,7 @@ func pullHelmChart(
 	pullClient.DestDir = destinationDir
 	out, err := pullClient.Run(chartRef)
 	if err != nil {
-		return "", fmt.Errorf("Failed to pull chart: %v", err)
+		return "", fmt.Errorf("Failed to pull chart: %w", err)
 	}
 	if out != "" {
 		logger.Infof("helm pull run output %s", out)
@@ -167,18 +168,18 @@ func pullHelmChart(
 	// Check if the chart was downloaded to the destination directory
 	files, err := os.ReadDir(destinationDir)
 	if err != nil {
-		return "", fmt.Errorf("Failed to read destination directory: %v", err)
+		return "", fmt.Errorf("Failed to read destination directory: %w", err)
 	}
 
 	var chartFileName string
 	// we also want to fail if there are multiple chart files in the destination directory
 	if len(files) > 1 {
-		return "", fmt.Errorf("Multiple chart files found in destination directory")
+		return "", errors.New("Multiple chart files found in destination directory")
 	}
 	chartFileName = files[0].Name()
 
 	if chartFileName == "" {
-		return "", fmt.Errorf("No chart file found in destination directory")
+		return "", errors.New("No chart file found in destination directory")
 	}
 
 	logger.Infof("Pulled Helm chart file: %s", chartFileName)

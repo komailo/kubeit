@@ -53,7 +53,7 @@ func uriIsDockerImgRef(uri string) (bool, string) {
 	return false, ""
 }
 
-func SourceConfigUriParser(uri string) (string, string, error) {
+func SourceConfigURIParser(uri string) (string, string, error) {
 	var scheme, path string
 	var ok bool
 	// check to see if a scheme:// is present in the uri
