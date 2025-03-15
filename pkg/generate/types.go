@@ -2,7 +2,7 @@ package generate
 
 import "github.com/komailo/kubeit/common"
 
-type GenerateOptions struct {
+type Options struct {
 	OutputDir       string
 	WorkDir         string
 	SourceConfigURI string

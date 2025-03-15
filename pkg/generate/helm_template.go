@@ -8,7 +8,7 @@ import (
 func generateHelmTemplates(
 	kubeitFileResources []apis.KubeitFileResource,
 	loaderMeta apis.LoaderMeta,
-	generateSetOptions *GenerateOptions,
+	generateSetOptions *Options,
 ) []error {
 	var errs []error
 	for _, kubeitFileResource := range kubeitFileResources {
@@ -21,7 +21,7 @@ func generateHelmTemplates(
 		}
 
 		if resource, ok := kubeitFileResource.Resource.(*helmappv1alpha1.HelmApplication); ok {
-			err := GenerateManifestFromHelm(*resource, &loaderMeta, generateSetOptions)
+			err := ManifestFromHelm(*resource, &loaderMeta, generateSetOptions)
 			if err != nil {
 				errs = append(errs, err)
 			}

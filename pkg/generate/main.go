@@ -18,7 +18,7 @@ import (
 	"github.com/komailo/kubeit/pkg/apis"
 )
 
-func GenerateManifests(generateSetOptions *GenerateOptions) ([]error, map[string][]error) {
+func Manifests(generateSetOptions *Options) ([]error, map[string][]error) {
 	sourceConfigURI := generateSetOptions.SourceConfigURI
 	logger.Infof("Generating manifests from %s", sourceConfigURI)
 	kubeitFileResources, loaderMeta, fileLoadErrs, loaderErrs := apis.Loader(sourceConfigURI)
@@ -43,8 +43,8 @@ func GenerateManifests(generateSetOptions *GenerateOptions) ([]error, map[string
 	return nil, nil
 }
 
-func GenerateDockerLabels(
-	_ *GenerateOptions,
+func DockerLabels(
+	_ *Options,
 	sourceConfigURI string,
 ) ([]error, map[string][]error) {
 	logger.Infof("Generating Docker Labels from %s", sourceConfigURI)
@@ -101,7 +101,7 @@ func GenerateDockerLabels(
 	return nil, nil
 }
 
-func GenerateCliDocs(rootCmd *cobra.Command, generateSetOptions *GenerateOptions) error {
+func CliDocs(rootCmd *cobra.Command, generateSetOptions *Options) error {
 	docsDir := filepath.Join(generateSetOptions.OutputDir, "cli", common.KubeitCLIName)
 	if err := os.MkdirAll(docsDir, 0o755); err != nil {
 		return fmt.Errorf("failed to create docs directory: %w", err)
@@ -116,5 +116,5 @@ func GenerateCliDocs(rootCmd *cobra.Command, generateSetOptions *GenerateOptions
 	return nil
 }
 
-func GenerateSchemas() {
+func Schemas() {
 }

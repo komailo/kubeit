@@ -17,10 +17,10 @@ import (
 	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
 )
 
-func GenerateManifestFromHelm(
+func ManifestFromHelm(
 	helmApplication helmappv1alpha1.HelmApplication,
 	loaderMeta *apis.LoaderMeta,
-	generateSetOptions *GenerateOptions,
+	generateSetOptions *Options,
 ) error {
 	name := helmApplication.Spec.Chart.Name
 	releaseName := helmApplication.Spec.Chart.ReleaseName
@@ -37,7 +37,7 @@ func GenerateManifestFromHelm(
 		logger.Fatalf("Failed to initialize Helm action configuration: %v", err)
 	}
 
-	chartPath, error := pullHelmChart(
+	chartPath, err := pullHelmChart(
 		settings,
 		actionConfig,
 		repository,
@@ -46,9 +46,8 @@ func GenerateManifestFromHelm(
 		chartVersion,
 		generateSetOptions,
 	)
-
-	if error != nil {
-		return error
+	if err != nil {
+		return err
 	}
 	chart, err := loader.Load(chartPath)
 	if err != nil {
@@ -115,7 +114,7 @@ func pullHelmChart(
 	settings *cli.EnvSettings,
 	actionConfig *action.Configuration,
 	repository, name, url, version string,
-	generateSetOptions *GenerateOptions,
+	generateSetOptions *Options,
 ) (string, error) {
 	// Pull OCI chart
 	pullClient := action.NewPullWithOpts(action.WithConfig(actionConfig))

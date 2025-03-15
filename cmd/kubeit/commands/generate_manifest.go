@@ -18,7 +18,7 @@ var GenerateManifestCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		generateSetOptions.SourceConfigURI = args[0]
 
-		generateErrs, loadFileErrs := generate.GenerateManifests(&generateSetOptions)
+		generateErrs, loadFileErrs := generate.Manifests(&generateSetOptions)
 
 		errorMap := make(map[string][]string) // Map to store errors per file
 		if len(loadFileErrs) != 0 {

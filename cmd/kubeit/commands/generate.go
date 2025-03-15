@@ -15,7 +15,7 @@ type contextKey string
 const cmdErrorKey contextKey = "cmdError"
 
 // Options specific to the generate command
-var generateSetOptions generate.GenerateOptions
+var generateSetOptions generate.Options
 
 // GenerateCmd is the base sub command
 var GenerateCmd = &cobra.Command{

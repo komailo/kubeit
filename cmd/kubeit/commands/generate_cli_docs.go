@@ -14,7 +14,7 @@ var generateCliDocsCmd = &cobra.Command{
 	Short: "Generate CLI documentation",
 	Long:  `Generates markdown documentation for the CLI commands.`,
 	RunE: func(_ *cobra.Command, _ []string) error {
-		err := generate.GenerateCliDocs(RootCmd, &generateSetOptions)
+		err := generate.CliDocs(RootCmd, &generateSetOptions)
 		if err != nil {
 			return fmt.Errorf("failed to generate CLI docs: %w", err)
 		}

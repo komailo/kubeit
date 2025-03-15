@@ -20,7 +20,7 @@ import (
 func generateHelmValues(
 	values []helmappv1alpha1.ValueEntry,
 	loaderMeta *apis.LoaderMeta,
-	generateSetOptions *GenerateOptions,
+	generateSetOptions *Options,
 ) (helmCliValues.Options, error) {
 	valuesFile, err := os.CreateTemp(generateSetOptions.WorkDir, "helm-values-*.yaml")
 	if err != nil {
