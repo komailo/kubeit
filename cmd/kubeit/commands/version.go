@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"runtime/debug"
 
+	"github.com/spf13/cobra"
+
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/internal/version"
-	"github.com/spf13/cobra"
 )
 
 //go:embed assets/LICENSE

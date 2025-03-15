@@ -7,13 +7,14 @@ import (
 	"regexp"
 	"strings"
 
+	"gopkg.in/yaml.v2"
+	helmCliValues "helm.sh/helm/v3/pkg/cli/values"
+
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/internal/version"
 	"github.com/komailo/kubeit/pkg/apis"
 	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
 	"github.com/komailo/kubeit/pkg/utils"
-	"gopkg.in/yaml.v2"
-	helmCliValues "helm.sh/helm/v3/pkg/cli/values"
 )
 
 func generateHelmValues(

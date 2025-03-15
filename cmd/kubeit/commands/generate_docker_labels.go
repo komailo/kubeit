@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/pkg/generate"
-	"github.com/spf13/cobra"
 )
 
 var GenerateDockerLabelsCmd = &cobra.Command{

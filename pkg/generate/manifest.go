@@ -6,14 +6,15 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/komailo/kubeit/internal/logger"
-	"github.com/komailo/kubeit/pkg/apis"
-	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/chartutil"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/registry"
+
+	"github.com/komailo/kubeit/internal/logger"
+	"github.com/komailo/kubeit/pkg/apis"
+	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
 )
 
 func GenerateManifestFromHelm(

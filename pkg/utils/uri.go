@@ -7,6 +7,7 @@ import (
 	"regexp"
 
 	"github.com/distribution/reference"
+
 	"github.com/komailo/kubeit/internal/logger"
 )
 

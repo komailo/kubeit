@@ -14,13 +14,14 @@ import (
 
 	"github.com/docker/docker/client"
 	"github.com/go-playground/validator/v10"
+	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/yaml"
+
 	"github.com/komailo/kubeit/common"
 	"github.com/komailo/kubeit/internal/logger"
 	appv1alpha1 "github.com/komailo/kubeit/pkg/apis/application/v1alpha1"
 	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
 	"github.com/komailo/kubeit/pkg/utils"
-	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 // TypeRegistry holds mappings of Kind -> APIVersion -> Struct Type

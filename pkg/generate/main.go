@@ -8,13 +8,14 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/cobra/doc"
+	"sigs.k8s.io/yaml"
+
 	"github.com/komailo/kubeit/common"
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/internal/version"
 	"github.com/komailo/kubeit/pkg/apis"
-	"github.com/spf13/cobra"
-	"github.com/spf13/cobra/doc"
-	"sigs.k8s.io/yaml"
 )
 
 func GenerateManifests(generateSetOptions *GenerateOptions) ([]error, map[string][]error) {
