@@ -12,7 +12,7 @@ require (
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
 	gopkg.in/yaml.v2 v2.4.0
-	gotest.tools/v3 v3.4.0
+	gotest.tools/v3 v3.5.2
 	helm.sh/helm/v3 v3.17.2
 	k8s.io/apimachinery v0.32.3
 	sigs.k8s.io/yaml v1.4.0
