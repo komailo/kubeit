@@ -25,6 +25,7 @@ func NewRealDockerClient() (*RealDockerClient, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Docker client: %w", err)
 	}
+
 	return &RealDockerClient{client: cli}, nil
 }
 
@@ -47,7 +48,9 @@ func CheckDockerImageExists(dockerClient DockerClientInterface, imageRef string)
 		if client.IsErrNotFound(err) {
 			return false, nil
 		}
+
 		return false, fmt.Errorf("failed to inspect Docker image: %w", err)
 	}
+
 	return true, nil
 }

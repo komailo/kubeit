@@ -11,6 +11,7 @@ func generateHelmTemplates(
 	generateSetOptions *Options,
 ) []error {
 	var errs []error
+
 	for _, kubeitFileResource := range kubeitFileResources {
 		if kubeitFileResource.APIMetadata.Kind != helmappv1alpha1.Kind {
 			continue
@@ -27,5 +28,6 @@ func generateHelmTemplates(
 			}
 		}
 	}
+
 	return errs
 }

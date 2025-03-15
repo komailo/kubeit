@@ -53,7 +53,9 @@ func GetBuildInfo() BuildInfo {
 // Its a handy function that version commands can use to print the build information.
 func PrintBuildInfo() {
 	buildInfo := GetBuildInfo()
+
 	fmt.Printf("Build Info:\n")
+
 	v := reflect.ValueOf(buildInfo)
 	typeOfBuildInfo := v.Type()
 

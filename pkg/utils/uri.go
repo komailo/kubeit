@@ -15,14 +15,18 @@ func uriIsFile(uri string) (bool, string) {
 	_, err := os.Stat(uri)
 	if err == nil {
 		logger.Debugf("File %s found so URI does look like a file", uri)
+
 		absPath, err := filepath.Abs(uri)
 		if err != nil {
 			logger.Warnf("Failed to get absolute path for file %s", uri)
 			return false, ""
 		}
+
 		return true, absPath
 	}
+
 	logger.Debugf("File %s not found so URI does not look like a file", uri)
+
 	return false, ""
 }
 
@@ -41,6 +45,7 @@ func uriIsDockerImgRef(uri string) (bool, string) {
 		logger.Errorf("failed to create Docker client: %v", err)
 		return false, ""
 	}
+
 	if exists, err := CheckDockerImageExists(dockerClientInstance, ref.String()); exists &&
 		err == nil {
 		logger.Debugf("URI %s matches Docker image pattern and exists", uri)
@@ -51,14 +56,17 @@ func uriIsDockerImgRef(uri string) (bool, string) {
 		"URI %s matches Docker image pattern but does not exist - so guessing its not a Docker image ref",
 		uri,
 	)
+
 	return false, ""
 }
 
 func SourceConfigURIParser(uri string) (string, string, error) {
 	var scheme, path string
+
 	var ok bool
 	// check to see if a scheme:// is present in the uri
 	schemeRegex := regexp.MustCompile(`^([a-zA-Z][a-zA-Z0-9+.-]*):\/\/(.*)`)
+
 	matches := schemeRegex.FindStringSubmatch(uri)
 	if len(matches) > 1 {
 		scheme = matches[1]
@@ -78,6 +86,7 @@ func SourceConfigURIParser(uri string) (string, string, error) {
 				logger.Warnf("unable to get absolute path for file %s", path)
 				return scheme, "", nil
 			}
+
 			return scheme, absPath, nil
 		} else if scheme == "docker" {
 			ref, err := reference.ParseNormalizedNamed(path)
@@ -85,15 +94,18 @@ func SourceConfigURIParser(uri string) (string, string, error) {
 				logger.Debugf("unable to parse and normalize Docker path: %s %v", path, err)
 				return scheme, "", nil
 			}
+
 			return scheme, ref.String(), nil
 		}
 	}
 
 	if ok, path = uriIsFile(uri); ok {
 		logger.Debugf("URI %s is a valid file, converting to file scheme", uri)
+
 		scheme = "file"
 	} else if ok, path = uriIsDockerImgRef(uri); ok {
 		logger.Debugf("URI %s is a Docker Image Ref, converting to docker scheme", uri)
+
 		scheme = "docker"
 	} else {
 		return "", "", fmt.Errorf("URI %s is not guessable", uri)

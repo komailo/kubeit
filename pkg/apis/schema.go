@@ -21,6 +21,7 @@ var schemaMap = map[string]any{
 func GenerateSchemas(outputDir string) error {
 	for name, obj := range schemaMap {
 		schema := jsonschema.Reflect(obj)
+
 		schemaJSON, err := json.MarshalIndent(schema, "", "  ")
 		if err != nil {
 			return fmt.Errorf("failed to generate schema for %s: %w", name, err)
@@ -57,5 +58,6 @@ func GenerateSchemas(outputDir string) error {
 
 		fmt.Println("Generated schema:", fileName)
 	}
+
 	return nil
 }

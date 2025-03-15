@@ -55,6 +55,7 @@ func generateHelmValues(
 					err,
 				)
 			}
+
 			helmCliValuesOptions.Values = append(helmCliValuesOptions.Values, mappingValues...)
 		default:
 			return helmCliValuesOptions, fmt.Errorf("unsupported value type: %s", value.Type)
@@ -97,6 +98,7 @@ func generateHelmValues(
 				err,
 			)
 		}
+
 		valuesFileRead, err := os.ReadFile(valuesFile.Name())
 		if err != nil {
 			return helmCliValuesOptions, fmt.Errorf(
@@ -104,6 +106,7 @@ func generateHelmValues(
 				err,
 			)
 		}
+
 		logger.Infof("Generated Helm values from %d entries\n%s", len(jsonValues), valuesFileRead)
 	}
 
@@ -119,10 +122,13 @@ func generateValueMappings(
 	if err := json.Unmarshal(data, &mappings); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal mappings data: %w", err)
 	}
+
 	var setValues []string
 
 	varPattern := regexp.MustCompile(`\$\{([^}]+)\}|\$([a-zA-Z_][a-zA-Z0-9_]*)`)
+
 	var dockerRepo, dockerTag string
+
 	var err error
 
 	if loaderMeta.Scheme == "docker" {

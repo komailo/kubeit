@@ -76,6 +76,7 @@ func loadKubeitResource(data []byte) (KubeitResource, error) {
 		logger.Debugf("Unknown resource kind: %s", metaOnly.Kind)
 		return nil, fmt.Errorf("unknown resource kind: %s", metaOnly.Kind)
 	}
+
 	resourceType, versionExists := kindRegistry[metaOnly.APIVersion]
 	if !versionExists {
 		logger.Debugf("Unsupported apiVersion: %s", metaOnly.APIVersion)
@@ -105,6 +106,7 @@ func loadKubeitResource(data []byte) (KubeitResource, error) {
 	res, ok := resourceInstance.(KubeitResource)
 	if !ok {
 		logger.Debugf("Failed to assert resource as KubeitResource, got: %T", resourceInstance)
+
 		return nil, fmt.Errorf(
 			"failed to assert resource as KubeitResource, got: %T",
 			resourceInstance,
@@ -118,6 +120,7 @@ func loadKubeitResource(data []byte) (KubeitResource, error) {
 	}
 
 	logger.Debugf("Successfully loaded resource: %s", res.GetAPIMetadata().Kind)
+
 	return res, nil
 }
 
@@ -140,9 +143,11 @@ func loadKubeitResource(data []byte) (KubeitResource, error) {
 //  4. Collects and returns any errors encountered during the process.
 func loadKubeitResources(data []byte) ([]KubeitResource, []error) {
 	var resources []KubeitResource
+
 	var errors []error
 
 	decoder := yaml.NewYAMLOrJSONDecoder(bytes.NewReader(data), 4096)
+
 	for {
 		var rawMessage json.RawMessage
 		if err := decoder.Decode(&rawMessage); err != nil {
@@ -154,8 +159,10 @@ func loadKubeitResources(data []byte) ([]KubeitResource, []error) {
 			errors = append(errors, fmt.Errorf("failed to load resource: %w", err))
 			continue
 		}
+
 		resources = append(resources, resource)
 	}
+
 	return resources, errors
 }
 
@@ -184,12 +191,14 @@ func loadKubeitResources(data []byte) ([]KubeitResource, []error) {
 // map to ensure all resources were loaded successfully.
 func loadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]error) {
 	var resources []KubeitFileResource
+
 	errors := make(map[string][]error)
 
 	absDirPath, err := filepath.Abs(dir)
 	if err != nil {
 		logger.Warnf("Failed to get absolute path for file %s", dir)
 		errors[dir] = append(errors[dir], fmt.Errorf("failed to walk directory: %w", err))
+
 		return nil, errors
 	}
 
@@ -206,9 +215,12 @@ func loadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]
 				logger.Debugf("Skiping root directory to load Kubeit resources from: %s", filePath)
 				return filepath.SkipDir
 			}
+
 			logger.Debugf("Found directory to walk to Kubeit resources from: %s", filePath)
+
 			return nil
 		}
+
 		logger.Infof("Loading file: %s", filePath)
 
 		data, err := os.ReadFile(filePath)
@@ -259,6 +271,7 @@ func loadKubeitResourcesFromDockerImage(
 	imageRef string,
 ) ([]KubeitFileResource, map[string][]error) {
 	var resources []KubeitFileResource
+
 	errors := make(map[string][]error)
 
 	dockerClientInstance, err := utils.NewRealDockerClient()
@@ -267,6 +280,7 @@ func loadKubeitResourcesFromDockerImage(
 			errors[imageRef],
 			fmt.Errorf("failed to create Docker client: %w", err),
 		)
+
 		return nil, errors
 	}
 
@@ -282,6 +296,7 @@ func loadKubeitResourcesFromDockerImage(
 			errors[imageRef],
 			fmt.Errorf("failed to create Docker client: %w", err),
 		)
+
 		return nil, errors
 	}
 
@@ -291,17 +306,20 @@ func loadKubeitResourcesFromDockerImage(
 			errors[imageRef],
 			fmt.Errorf("failed to inspect Docker image: %w", err),
 		)
+
 		return nil, errors
 	}
 
 	// check if kubeit.komail.io/resources is present in the labels
 	labelKey := common.KubeitDomain + "/resources"
+
 	base64Resource, ok := imageInspect.Config.Labels[labelKey]
 	if !ok {
 		errors[imageRef] = append(
 			errors[imageRef],
 			fmt.Errorf("no Kubeit resources found in image: %s", imageRef),
 		)
+
 		return nil, errors
 	}
 
@@ -312,6 +330,7 @@ func loadKubeitResourcesFromDockerImage(
 			errors[imageRef],
 			fmt.Errorf("failed to decode base64 resources: %w", err),
 		)
+
 		return nil, errors
 	}
 
@@ -348,6 +367,7 @@ func CountResources(resources []KubeitFileResource) map[string]int {
 	for _, resource := range resources {
 		counts[resource.APIMetadata.Kind]++
 	}
+
 	return counts
 }
 
@@ -422,7 +442,9 @@ func Loader(sourceConfigURI string) ([]KubeitFileResource, LoaderMeta, map[strin
 	}
 
 	logger.Infof("Loading Kubeit resources from %s", sourceConfigURI)
+
 	var kubeitFileResources []KubeitFileResource
+
 	var loadErrs map[string][]error
 
 	switch sourceScheme {

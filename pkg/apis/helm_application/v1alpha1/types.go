@@ -89,6 +89,7 @@ func (c *HelmApplication) Validate() error {
 			}
 		}
 	}
+
 	return nil
 }
 
@@ -96,6 +97,7 @@ func (c *HelmApplication) Validate() error {
 func (v *ValueEntry) UnmarshalJSON(data []byte) error {
 	// Define an alias to avoid infinite recursion
 	type Alias ValueEntry
+
 	aux := &struct {
 		Data json.RawMessage `json:"data,omitempty"`
 		*Alias

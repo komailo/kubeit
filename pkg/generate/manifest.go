@@ -33,6 +33,7 @@ func ManifestFromHelm(
 	// Initialize Helm environment
 	settings := cli.New()
 	actionConfig := new(action.Configuration)
+
 	if err := actionConfig.Init(settings.RESTClientGetter(), "", os.Getenv("HELM_DRIVER"), logger.Infof); err != nil {
 		logger.Fatalf("Failed to initialize Helm action configuration: %v", err)
 	}
@@ -49,6 +50,7 @@ func ManifestFromHelm(
 	if err != nil {
 		return err
 	}
+
 	chart, err := loader.Load(chartPath)
 	if err != nil {
 		logger.Fatalf("Failed to load Helm chart: %v", err)
@@ -79,8 +81,10 @@ func ManifestFromHelm(
 		if err != nil {
 			return fmt.Errorf("invalid kube version '%s': %w", kubeVersion, err)
 		}
+
 		installClient.KubeVersion = parsedKubeVersion
 	}
+
 	release, err := installClient.Run(chart, chartValues)
 	if err != nil {
 		logger.Fatalf("Failed to render templates: %v", err)
@@ -93,6 +97,7 @@ func ManifestFromHelm(
 	// TODO: Add common labels and annotations to the manifest
 	// processedManifest, err := addCommonLabelsAndAnnotationsToK8sObject(release.Manifest)
 	processedManifest := release.Manifest
+
 	if err != nil {
 		logger.Fatalf("Failed to process manifest: %v", err)
 	}
@@ -118,10 +123,12 @@ func pullHelmChart(
 ) (string, error) {
 	// Pull OCI chart
 	pullClient := action.NewPullWithOpts(action.WithConfig(actionConfig))
+
 	registryClient, err := registry.NewClient()
 	if err != nil {
 		logger.Fatalf("Failed to create registry client: %v", err)
 	}
+
 	pullClient.SetRegistryClient(registryClient)
 	pullClient.Settings = settings
 
@@ -139,6 +146,7 @@ func pullHelmChart(
 	}
 
 	var chartRef string
+
 	switch {
 	case name == "" && repository == "" && url == "":
 		return "", errors.New("either chart name and repository or url must be provided")
@@ -157,10 +165,12 @@ func pullHelmChart(
 
 	pullClient.Version = version
 	pullClient.DestDir = destinationDir
+
 	out, err := pullClient.Run(chartRef)
 	if err != nil {
 		return "", fmt.Errorf("Failed to pull chart: %w", err)
 	}
+
 	if out != "" {
 		logger.Infof("helm pull run output %s", out)
 	}
@@ -176,6 +186,7 @@ func pullHelmChart(
 	if len(files) > 1 {
 		return "", errors.New("Multiple chart files found in destination directory")
 	}
+
 	chartFileName = files[0].Name()
 
 	if chartFileName == "" {
