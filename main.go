@@ -4,8 +4,9 @@ import (
 	"os"
 	"path/filepath"
 
-	kubeitCmd "github.com/komailo/kubeit/cmd/kubeit/commands"
 	"github.com/spf13/cobra"
+
+	kubeitCmd "github.com/komailo/kubeit/cmd/kubeit/commands"
 )
 
 func main() {

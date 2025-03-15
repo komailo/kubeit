@@ -12,7 +12,7 @@ import (
 var generateSchemaCmd = &cobra.Command{
 	Use:   "schema",
 	Short: "Generates JSON schemas for all API versions",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		outputDir := "schemas"
 		fmt.Println("Generating schemas...")
 

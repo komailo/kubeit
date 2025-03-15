@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 
+	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/komailo/kubeit/common"
 	"github.com/komailo/kubeit/pkg/utils"
-	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (

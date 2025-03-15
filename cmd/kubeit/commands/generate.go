@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/pkg/generate"
-	"github.com/spf13/cobra"
 )
 
 type contextKey string
@@ -14,14 +15,14 @@ type contextKey string
 const cmdErrorKey contextKey = "cmdError"
 
 // Options specific to the generate command
-var generateSetOptions generate.GenerateOptions
+var generateSetOptions generate.Options
 
 // GenerateCmd is the base sub command
 var GenerateCmd = &cobra.Command{
 	Use:   "generate",
 	Short: "Generate artifacts",
 	Long:  ``,
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+	PersistentPreRun: func(_ *cobra.Command, _ []string) {
 		// Create the work directory
 		workDir := generateSetOptions.WorkDir
 		outputDir := generateSetOptions.OutputDir
@@ -43,11 +44,11 @@ var GenerateCmd = &cobra.Command{
 			logger.Fatalf("Failed to create output directory: %v", err)
 		}
 	},
-	PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
+	PersistentPostRunE: func(cmd *cobra.Command, _ []string) error {
 		// Cleanup: Delete the work directory
 		workDir := generateSetOptions.WorkDir
 		if err := os.RemoveAll(workDir); err != nil {
-			return fmt.Errorf("Failed to delete work directory: %v", err)
+			return fmt.Errorf("Failed to delete work directory: %w", err)
 		}
 		logger.Debugf("Work directory deleted: %s", workDir)
 

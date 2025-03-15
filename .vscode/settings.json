@@ -1,7 +1,15 @@
 {
-  "editor.rulers": [88],
+  "editor.rulers": [100],
   "editor.formatOnSave": true,
   "go.formatTool": "goimports",
   "go.lintTool": "golangci-lint",
-  "go.lintFlags": ["--fast"]
+  "go.lintFlags": ["--fast"],
+  "emeraldwalk.runonsave": {
+    "commands": [
+      {
+        "match": "\\.go$",
+        "cmd": "golines ${file} --write-output"
+      }
+    ]
+  }
 }

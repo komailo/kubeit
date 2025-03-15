@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -13,13 +14,14 @@ import (
 
 	"github.com/docker/docker/client"
 	"github.com/go-playground/validator/v10"
+	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/yaml"
+
 	"github.com/komailo/kubeit/common"
 	"github.com/komailo/kubeit/internal/logger"
 	appv1alpha1 "github.com/komailo/kubeit/pkg/apis/application/v1alpha1"
 	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
 	"github.com/komailo/kubeit/pkg/utils"
-	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 // TypeRegistry holds mappings of Kind -> APIVersion -> Struct Type
@@ -65,7 +67,7 @@ func loadKubeitResource(data []byte) (KubeitResource, error) {
 
 	if metaOnly.APIVersion == "" || metaOnly.Kind == "" {
 		logger.Debugf("Missing apiVersion or kind in resource")
-		return nil, fmt.Errorf("missing apiVersion or kind in resource")
+		return nil, errors.New("missing apiVersion or kind in resource")
 	}
 
 	// Lookup the resource type
@@ -203,12 +205,10 @@ func loadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]
 				filepath.Dir(filePath) == filepath.Clean(dir) {
 				logger.Debugf("Skiping root directory to load Kubeit resources from: %s", filePath)
 				return filepath.SkipDir
-			} else {
-				logger.Debugf("Found directory to walk to Kubeit resources from: %s", filePath)
-				return nil
 			}
+			logger.Debugf("Found directory to walk to Kubeit resources from: %s", filePath)
+			return nil
 		}
-
 		logger.Infof("Loading file: %s", filePath)
 
 		data, err := os.ReadFile(filePath)
@@ -295,7 +295,7 @@ func loadKubeitResourcesFromDockerImage(
 	}
 
 	// check if kubeit.komail.io/resources is present in the labels
-	labelKey := fmt.Sprintf(common.KubeitDomain + "/resources")
+	labelKey := common.KubeitDomain + "/resources"
 	base64Resource, ok := imageInspect.Config.Labels[labelKey]
 	if !ok {
 		errors[imageRef] = append(
@@ -409,8 +409,8 @@ func LogResources(kubeitFileResources []KubeitFileResource) {
 //     directory or a Docker image or any other supported scheme.
 //  3. Returns the loaded resources, any errors encountered, and a map of
 //     file-specific errors.
-func Loader(sourceConfigUri string) ([]KubeitFileResource, LoaderMeta, error, map[string][]error) {
-	sourceScheme, source, err := utils.SourceConfigUriParser(sourceConfigUri)
+func Loader(sourceConfigURI string) ([]KubeitFileResource, LoaderMeta, map[string][]error, error) {
+	sourceScheme, source, err := utils.SourceConfigURIParser(sourceConfigURI)
 
 	loaderMeta := LoaderMeta{
 		Source: source,
@@ -418,32 +418,38 @@ func Loader(sourceConfigUri string) ([]KubeitFileResource, LoaderMeta, error, ma
 	}
 
 	if err != nil {
-		return nil, loaderMeta, err, nil
+		return nil, loaderMeta, nil, err
 	}
 
-	logger.Infof("Loading Kubeit resources from %s", sourceConfigUri)
+	logger.Infof("Loading Kubeit resources from %s", sourceConfigURI)
 	var kubeitFileResources []KubeitFileResource
 	var loadErrs map[string][]error
 
-	if sourceScheme == "file" {
+	switch sourceScheme {
+	case "file":
 		kubeitFileResources, loadErrs = loadKubeitResourcesFromDir(source)
-	} else if sourceScheme == "docker" {
+	case "docker":
 		kubeitFileResources, loadErrs = loadKubeitResourcesFromDockerImage(source)
-	} else {
-		return nil, loaderMeta, fmt.Errorf("unsupported source config URI scheme: %s", sourceScheme), nil
+	default:
+		return nil, loaderMeta, nil, fmt.Errorf(
+			"unsupported source config URI scheme: %s",
+			sourceScheme,
+		)
 	}
 
 	if len(loadErrs) != 0 {
-		errMsg := fmt.Sprintf("%d files have errors while loading Kubeit resources", len(loadErrs))
-		return nil, loaderMeta, fmt.Errorf("%v", errMsg), loadErrs
+		return nil, loaderMeta, loadErrs, fmt.Errorf(
+			"%d files have errors while loading Kubeit resources",
+			len(loadErrs),
+		)
 	}
 
 	resourceCount := len(kubeitFileResources)
 	if resourceCount == 0 {
-		return nil, loaderMeta, fmt.Errorf(
+		return nil, loaderMeta, nil, fmt.Errorf(
 			"no Kubeit resources found when traversing: %s",
-			sourceConfigUri,
-		), nil
+			sourceConfigURI,
+		)
 	}
 
 	return kubeitFileResources, loaderMeta, nil, nil

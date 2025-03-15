@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/docker/docker/api/types/image"
@@ -38,7 +39,7 @@ func (r *RealDockerClient) ImageInspect(
 // CheckDockerImageExists checks if a Docker image exists
 func CheckDockerImageExists(dockerClient DockerClientInterface, imageRef string) (bool, error) {
 	if dockerClient == nil {
-		return false, fmt.Errorf("docker client is not initialized")
+		return false, errors.New("docker client is not initialized")
 	}
 
 	_, err := dockerClient.ImageInspect(context.Background(), imageRef)

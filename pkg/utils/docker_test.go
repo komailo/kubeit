@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 // MockDockerClient is a mock implementation of DockerClientInterface
@@ -33,7 +34,7 @@ func TestCheckDockerImageExists_ImageExists(t *testing.T) {
 
 	exists, err := CheckDockerImageExists(mockClient, imageRef)
 
-	assert.NoError(t, err)
+	require.Error(t, err)
 	assert.True(t, exists)
 	mockClient.AssertExpectations(t)
 }
@@ -46,7 +47,7 @@ func TestCheckDockerImageExists_ImageNotFound(t *testing.T) {
 
 	exists, err := CheckDockerImageExists(mockClient, imageRef)
 
-	assert.Nil(t, err)
+	require.Error(t, err)
 	assert.False(t, exists)
 	mockClient.AssertExpectations(t)
 }
@@ -59,7 +60,7 @@ func TestCheckDockerImageExists_ClientError(t *testing.T) {
 
 	exists, err := CheckDockerImageExists(mockClient, imageRef)
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.False(t, exists)
 	mockClient.AssertExpectations(t)
 }
@@ -67,6 +68,6 @@ func TestCheckDockerImageExists_ClientError(t *testing.T) {
 func TestCheckDockerImageExists_DockerClientNotInit(t *testing.T) {
 	exists, err := CheckDockerImageExists(nil, "")
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	assert.False(t, exists)
 }

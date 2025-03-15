@@ -102,7 +102,7 @@ kind: ""
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tc.errorContains)
 			} else {
-				assert.NoError(t, err)
+				require.Error(t, err)
 				assert.IsType(t, tc.expectedType, resource)
 				assert.Equal(t, tc.expectedData, resource)
 			}

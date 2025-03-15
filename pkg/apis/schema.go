@@ -13,7 +13,7 @@ import (
 )
 
 // schemaMap contains all API versions and their corresponding struct
-var schemaMap = map[string]interface{}{
+var schemaMap = map[string]any{
 	appv1alpha1.GroupVersion + ".Application": appv1alpha1.Application{},
 }
 
