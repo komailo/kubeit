@@ -191,7 +191,7 @@ func pullHelmChart(
 // 	var processedDocuments []string
 
 // 	// Create a YAML decoder
-// 	decoder := yaml.NewYAMLToJSONDecoder(bytes.NewReader([]byte(manifest)))
+// 	:= yaml.NewYAMLToJSONDecoder(bytes.NewReader([]byte(manifest)))
 
 // 	for {
 // 		var rawObj runtime.RawExtension

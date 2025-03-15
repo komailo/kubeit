@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	helmCliValues "helm.sh/helm/v3/pkg/cli/values"
 
 	"github.com/komailo/kubeit/internal/logger"
