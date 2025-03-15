@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/pkg/generate"
 	"github.com/spf13/cobra"
 )
@@ -46,6 +47,8 @@ var GenerateDockerLabelsCmd = &cobra.Command{
 			}
 			finalErr := fmt.Errorf("\n%s", strings.Join(formattedErrors, "\n"))
 			cmd.SetContext(context.WithValue(cmd.Context(), cmdErrorKey, finalErr))
+			logger.Errorf("Error generating docker labels: %v", finalErr)
+
 		}
 
 	},
