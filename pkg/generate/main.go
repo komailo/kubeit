@@ -18,9 +18,9 @@ import (
 )
 
 func GenerateManifests(generateSetOptions *GenerateOptions) ([]error, map[string][]error) {
-	sourceConfigUri := generateSetOptions.SourceConfigUri
-	logger.Infof("Generating manifests from %s", sourceConfigUri)
-	kubeitFileResources, loaderMeta, loaderErrs, fileLoadErrs := apis.Loader(sourceConfigUri)
+	sourceConfigURI := generateSetOptions.SourceConfigURI
+	logger.Infof("Generating manifests from %s", sourceConfigURI)
+	kubeitFileResources, loaderMeta, fileLoadErrs, loaderErrs := apis.Loader(sourceConfigURI)
 
 	if loaderErrs != nil {
 		return []error{loaderErrs}, fileLoadErrs
@@ -29,11 +29,11 @@ func GenerateManifests(generateSetOptions *GenerateOptions) ([]error, map[string
 	resourceCount := len(kubeitFileResources)
 	if resourceCount == 0 {
 		return []error{
-			fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri),
+			fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigURI),
 		}, nil
-	} else {
-		apis.LogResources(kubeitFileResources)
 	}
+
+	apis.LogResources(kubeitFileResources)
 
 	generateErrs := generateHelmTemplates(kubeitFileResources, loaderMeta, generateSetOptions)
 	if generateErrs != nil {
@@ -43,12 +43,12 @@ func GenerateManifests(generateSetOptions *GenerateOptions) ([]error, map[string
 }
 
 func GenerateDockerLabels(
-	generateSetOptions *GenerateOptions,
-	sourceConfigUri string,
+	_ *GenerateOptions,
+	sourceConfigURI string,
 ) ([]error, map[string][]error) {
-	logger.Infof("Generating Docker Labels from %s", sourceConfigUri)
+	logger.Infof("Generating Docker Labels from %s", sourceConfigURI)
 
-	kubeitFileResources, _, loaderErrs, fileLoadErrs := apis.Loader(sourceConfigUri)
+	kubeitFileResources, _, fileLoadErrs, loaderErrs := apis.Loader(sourceConfigURI)
 
 	if loaderErrs != nil {
 		return []error{loaderErrs}, fileLoadErrs
@@ -57,11 +57,11 @@ func GenerateDockerLabels(
 	resourceCount := len(kubeitFileResources)
 	if resourceCount == 0 {
 		return []error{
-			fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri),
+			fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigURI),
 		}, nil
-	} else {
-		apis.LogResources(kubeitFileResources)
 	}
+
+	apis.LogResources(kubeitFileResources)
 
 	var kubeitResourcesYaml strings.Builder
 

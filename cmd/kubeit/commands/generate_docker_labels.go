@@ -15,11 +15,11 @@ var GenerateDockerLabelsCmd = &cobra.Command{
 	Short: "Generate Docker labels from a Kubeit configuration",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		sourceConfigUri := args[0]
+		sourceConfigURI := args[0]
 
 		generateErrs, loadFileErrs := generate.GenerateDockerLabels(
 			&generateSetOptions,
-			sourceConfigUri,
+			sourceConfigURI,
 		)
 
 		errorMap := make(map[string][]string) // Map to store errors per file

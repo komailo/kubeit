@@ -30,7 +30,7 @@ var depNames = map[string]string{
 var VersionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version of Kubeit",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		if showLicense {
 			fmt.Println(licenseContent)
 		}
