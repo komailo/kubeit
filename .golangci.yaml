@@ -1,13 +1,18 @@
 linters:
   enable:
+    - canonicalheader
+    - copyloopvar
+    - dupword
     - errcheck
     - errorlint
     - gocritic
+    - gofmt
     - gofumpt
     - goimports
     - gomodguard
     - gosimple
     - govet
+    - importas
     - ineffassign
     - misspell
     - perfsprint
@@ -20,10 +25,74 @@ linters:
     - usestdlibvars
     - usetesting
     - whitespace
+
+    # - err113
+    # - exptostd
+    # - fatcontext
+    # - gci
+    # - ginkgolinter
+    # - goheader
+    # - iface
+    # - intrange
+    # - mirror
+    # - nakedret
+    # - nlreturn
+    # - protogetter
+    # - stylecheck
+    # - tagalign
+    # - wrapcheck
+    # - wsl
+
 run:
   timeout: 30m
 output:
   formats:
     - format: colored-line-number
-    - format: github-actions
 
+linters-settings:
+  gocritic:
+    disabled-checks: []
+  goimports:
+    local-prefixes: github.com/komailo/kubeit
+  gomodguard:
+    blocked:
+      modules:
+        - gopkg.in/yaml.v2:
+            recommendations:
+              - gopkg.in/yaml.v3
+            reason: "`gopkg.in/yaml.v2` is old. Use ` gopkg.in/yaml.v2` instead."
+        - github.com/pkg/errors:
+            recommendations:
+              - errors
+  importas:
+    alias:
+      - pkg: "k8s.io/apimachinery/pkg/apis/meta/v1"
+        alias: "k8smetav1"
+      - pkg: "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
+        alias: "helmappv1alpha1"
+      - pkg: "helm.sh/helm/v3/pkg/cli/values"
+        alias: "helmCliValues"
+      - pkg: "k8s.io/apimachinery/pkg/util/yaml"
+        alias: "k8syaml"
+      - pkg: "github.com/moby/moby"
+        alias: "docker"
+
+  nolintlint:
+    require-specific: true
+  perfsprint:
+    # Optimizes even if it requires an int or uint type cast.
+    int-conversion: true
+    # Optimizes into `err.Error()` even if it is only equivalent for non-nil errors.
+    err-error: true
+    # Optimizes `fmt.Errorf`.
+    errorf: true
+    # Optimizes `fmt.Sprintf` with only one argument.
+    sprintf1: true
+    # Optimizes into strings concatenation.
+    strconcat: true
+  usetesting:
+    os-mkdir-temp: false
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

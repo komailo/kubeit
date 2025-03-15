@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 
+	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/komailo/kubeit/common"
 	"github.com/komailo/kubeit/pkg/utils"
-	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -35,7 +36,7 @@ type Spec struct {
 	Chart  Chart        `json:"chart"            validate:"required"`
 	Values []ValueEntry `json:"values,omitempty"`
 	// RawValues             any                   `json:"rawValues,omitempty"`
-	// GenerateValueMappings GenerateValueMappings `json:"generateValueMappings,omitempty"`
+	// GenerateValueMappings `json:"generateValueMappings,omitempty"`
 }
 
 type Chart struct {

@@ -2,17 +2,17 @@ package generate
 
 import "github.com/komailo/kubeit/common"
 
-type GenerateOptions struct {
+type Options struct {
 	OutputDir       string
 	WorkDir         string
-	SourceConfigUri string
+	SourceConfigURI string
 	KubeVersion     string
 }
 
 type ManifestSource struct {
 	Type   string
-	Uri    string
-	RawUri string
+	URI    string
+	RawURI string
 }
 
 type CommonK8sLabels struct{}

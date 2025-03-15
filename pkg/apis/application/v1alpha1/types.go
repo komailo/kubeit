@@ -20,8 +20,8 @@ type Metadata struct {
 }
 
 // Method to get the API metadata
-func (h *Application) GetAPIMetadata() k8smetav1.TypeMeta {
-	return h.TypeMeta
+func (c *Application) GetAPIMetadata() k8smetav1.TypeMeta {
+	return c.TypeMeta
 }
 
 // Custom validation function for Application

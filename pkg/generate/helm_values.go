@@ -7,19 +7,20 @@ import (
 	"regexp"
 	"strings"
 
+	"gopkg.in/yaml.v3"
+	helmCliValues "helm.sh/helm/v3/pkg/cli/values"
+
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/internal/version"
 	"github.com/komailo/kubeit/pkg/apis"
 	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
 	"github.com/komailo/kubeit/pkg/utils"
-	"gopkg.in/yaml.v2"
-	helmCliValues "helm.sh/helm/v3/pkg/cli/values"
 )
 
 func generateHelmValues(
 	values []helmappv1alpha1.ValueEntry,
 	loaderMeta *apis.LoaderMeta,
-	generateSetOptions *GenerateOptions,
+	generateSetOptions *Options,
 ) (helmCliValues.Options, error) {
 	valuesFile, err := os.CreateTemp(generateSetOptions.WorkDir, "helm-values-*.yaml")
 	if err != nil {
@@ -66,7 +67,7 @@ func generateHelmValues(
 
 	// Convert and write each JSON object as a separate YAML document
 	for _, jsonValue := range jsonValues {
-		var yamlValue interface{}
+		var yamlValue any
 
 		// Unmarshal JSON into a generic interface
 		if err := json.Unmarshal(jsonValue, &yamlValue); err != nil {
@@ -89,7 +90,13 @@ func generateHelmValues(
 
 	if len(jsonValues) > 0 {
 		helmCliValuesOptions.ValueFiles = append(helmCliValuesOptions.ValueFiles, valuesFile.Name())
-		valuesFile.Seek(0, 0)
+		_, err := valuesFile.Seek(0, 0)
+		if err != nil {
+			return helmCliValuesOptions, fmt.Errorf(
+				"failed to seek to the beginning of the generated Helm values file: %w",
+				err,
+			)
+		}
 		valuesFileRead, err := os.ReadFile(valuesFile.Name())
 		if err != nil {
 			return helmCliValuesOptions, fmt.Errorf(
@@ -103,7 +110,7 @@ func generateHelmValues(
 	return helmCliValuesOptions, nil
 }
 
-// The function will substitue $VAR or ${VAR} with the actual value
+// The function will substitute $VAR or ${VAR} with the actual value
 func generateValueMappings(
 	data json.RawMessage,
 	loaderMeta *apis.LoaderMeta,

@@ -8,19 +8,20 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/cobra/doc"
+	"sigs.k8s.io/yaml"
+
 	"github.com/komailo/kubeit/common"
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/internal/version"
 	"github.com/komailo/kubeit/pkg/apis"
-	"github.com/spf13/cobra"
-	"github.com/spf13/cobra/doc"
-	"sigs.k8s.io/yaml"
 )
 
-func GenerateManifests(generateSetOptions *GenerateOptions) ([]error, map[string][]error) {
-	sourceConfigUri := generateSetOptions.SourceConfigUri
-	logger.Infof("Generating manifests from %s", sourceConfigUri)
-	kubeitFileResources, loaderMeta, loaderErrs, fileLoadErrs := apis.Loader(sourceConfigUri)
+func Manifests(generateSetOptions *Options) ([]error, map[string][]error) {
+	sourceConfigURI := generateSetOptions.SourceConfigURI
+	logger.Infof("Generating manifests from %s", sourceConfigURI)
+	kubeitFileResources, loaderMeta, fileLoadErrs, loaderErrs := apis.Loader(sourceConfigURI)
 
 	if loaderErrs != nil {
 		return []error{loaderErrs}, fileLoadErrs
@@ -29,11 +30,11 @@ func GenerateManifests(generateSetOptions *GenerateOptions) ([]error, map[string
 	resourceCount := len(kubeitFileResources)
 	if resourceCount == 0 {
 		return []error{
-			fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri),
+			fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigURI),
 		}, nil
-	} else {
-		apis.LogResources(kubeitFileResources)
 	}
+
+	apis.LogResources(kubeitFileResources)
 
 	generateErrs := generateHelmTemplates(kubeitFileResources, loaderMeta, generateSetOptions)
 	if generateErrs != nil {
@@ -42,13 +43,13 @@ func GenerateManifests(generateSetOptions *GenerateOptions) ([]error, map[string
 	return nil, nil
 }
 
-func GenerateDockerLabels(
-	generateSetOptions *GenerateOptions,
-	sourceConfigUri string,
+func DockerLabels(
+	_ *Options,
+	sourceConfigURI string,
 ) ([]error, map[string][]error) {
-	logger.Infof("Generating Docker Labels from %s", sourceConfigUri)
+	logger.Infof("Generating Docker Labels from %s", sourceConfigURI)
 
-	kubeitFileResources, _, loaderErrs, fileLoadErrs := apis.Loader(sourceConfigUri)
+	kubeitFileResources, _, fileLoadErrs, loaderErrs := apis.Loader(sourceConfigURI)
 
 	if loaderErrs != nil {
 		return []error{loaderErrs}, fileLoadErrs
@@ -57,11 +58,11 @@ func GenerateDockerLabels(
 	resourceCount := len(kubeitFileResources)
 	if resourceCount == 0 {
 		return []error{
-			fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri),
+			fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigURI),
 		}, nil
-	} else {
-		apis.LogResources(kubeitFileResources)
 	}
+
+	apis.LogResources(kubeitFileResources)
 
 	var kubeitResourcesYaml strings.Builder
 
@@ -100,7 +101,7 @@ func GenerateDockerLabels(
 	return nil, nil
 }
 
-func GenerateCliDocs(rootCmd *cobra.Command, generateSetOptions *GenerateOptions) error {
+func CliDocs(rootCmd *cobra.Command, generateSetOptions *Options) error {
 	docsDir := filepath.Join(generateSetOptions.OutputDir, "cli", common.KubeitCLIName)
 	if err := os.MkdirAll(docsDir, 0o755); err != nil {
 		return fmt.Errorf("failed to create docs directory: %w", err)
@@ -115,5 +116,5 @@ func GenerateCliDocs(rootCmd *cobra.Command, generateSetOptions *GenerateOptions
 	return nil
 }
 
-func GenerateSchemas() {
+func Schemas() {
 }

@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/pkg/generate"
-	"github.com/spf13/cobra"
 )
 
 var GenerateDockerLabelsCmd = &cobra.Command{
@@ -15,11 +16,11 @@ var GenerateDockerLabelsCmd = &cobra.Command{
 	Short: "Generate Docker labels from a Kubeit configuration",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		sourceConfigUri := args[0]
+		sourceConfigURI := args[0]
 
-		generateErrs, loadFileErrs := generate.GenerateDockerLabels(
+		generateErrs, loadFileErrs := generate.DockerLabels(
 			&generateSetOptions,
-			sourceConfigUri,
+			sourceConfigURI,
 		)
 
 		errorMap := make(map[string][]string) // Map to store errors per file
