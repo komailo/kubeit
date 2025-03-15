@@ -56,12 +56,10 @@ var VersionCmd = &cobra.Command{
 		if !showLicense {
 			fmt.Printf("For license information, run: kubeit version --%s\n", licenseFlag)
 		}
-
 	},
 }
 
 func init() {
 	VersionCmd.PersistentFlags().
 		BoolVar(&showLicense, licenseFlag, false, "Print the license information")
-
 }

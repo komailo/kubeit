@@ -8,7 +8,6 @@ linters:
     - gomodguard
     - gosimple
     - govet
-    - importas
     - ineffassign
     - misspell
     - perfsprint

@@ -4,8 +4,10 @@ import (
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-const GroupVersion = "kubeit.komailo.github.io/v1alpha1"
-const Kind = "Application"
+const (
+	GroupVersion = "kubeit.komailo.github.io/v1alpha1"
+	Kind         = "Application"
+)
 
 type Application struct {
 	Metadata Metadata `json:"metadata"`

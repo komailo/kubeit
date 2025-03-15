@@ -12,11 +12,14 @@ import (
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/chartutil"
 	"helm.sh/helm/v3/pkg/cli"
-	helmCliValues "helm.sh/helm/v3/pkg/cli/values"
 	"helm.sh/helm/v3/pkg/registry"
 )
 
-func GenerateManifestFromHelm(HelmApplication helmappv1alpha1.HelmApplication, loaderMeta *apis.LoaderMeta, generateSetOptions *GenerateOptions) error {
+func GenerateManifestFromHelm(
+	HelmApplication helmappv1alpha1.HelmApplication,
+	loaderMeta *apis.LoaderMeta,
+	generateSetOptions *GenerateOptions,
+) error {
 	name := HelmApplication.Spec.Chart.Name
 	releaseName := HelmApplication.Spec.Chart.ReleaseName
 	namespace := HelmApplication.Spec.Chart.Namespace
@@ -24,7 +27,6 @@ func GenerateManifestFromHelm(HelmApplication helmappv1alpha1.HelmApplication, l
 	repository := HelmApplication.Spec.Chart.Repository
 	url := HelmApplication.Spec.Chart.URL
 	kubeVersion := generateSetOptions.KubeVersion
-	rawValues := HelmApplication.Spec.RawValues
 
 	// Initialize Helm environment
 	settings := cli.New()
@@ -51,33 +53,19 @@ func GenerateManifestFromHelm(HelmApplication helmappv1alpha1.HelmApplication, l
 		logger.Fatalf("Failed to load Helm chart: %v", err)
 	}
 
-	helmCliValuesOptions := helmCliValues.Options{
-		ValueFiles:    []string{},
-		StringValues:  []string{},
-		Values:        []string{},
-		FileValues:    []string{},
-		JSONValues:    []string{},
-		LiteralValues: []string{},
+	helmCliValuesOptions, err := generateHelmValues(
+		HelmApplication.Spec.Values,
+		loaderMeta,
+		generateSetOptions,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to generate Helm values: %w", err)
 	}
 
-	// iterate over HelmApplication.Spec.GenerateValueMappings and add them to
-	// helmCliValuesOptions.Values
-	for key, value := range HelmApplication.Spec.GenerateValueMappings {
-		logger.Infof("key: %s, value: %s", key, value)
-		helmCliValuesOptions.Values = append(helmCliValuesOptions.Values, fmt.Sprintf("%s=%s", key, value))
-	}
-
-	if loaderMeta.Scheme == "docker" {
-	}
-
-	mergedValues, err := helmCliValuesOptions.MergeValues(nil)
+	chartValues, err := helmCliValuesOptions.MergeValues(nil)
 	if err != nil {
 		return fmt.Errorf("unable to merge Helm values: %s", err)
 	}
-
-	// chartValues := chartutil.CoalesceTables(chart.Values, rawValues.(map[string]any))
-	chartValues := chartutil.CoalesceTables(mergedValues, rawValues.(map[string]any))
-	fmt.Printf("chartValues: %v\n", chartValues)
 
 	installClient := action.NewInstall(actionConfig)
 	installClient.DryRun = true
@@ -102,7 +90,7 @@ func GenerateManifestFromHelm(HelmApplication helmappv1alpha1.HelmApplication, l
 		return fmt.Errorf("No manifest file generated")
 	}
 	// TODO: Add common labels and annotations to the manifest
-	//processedManifest, err := addCommonLabelsAndAnnotationsToK8sObject(release.Manifest)
+	// processedManifest, err := addCommonLabelsAndAnnotationsToK8sObject(release.Manifest)
 	processedManifest := release.Manifest
 	if err != nil {
 		logger.Fatalf("Failed to process manifest: %v", err)

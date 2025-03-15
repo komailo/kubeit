@@ -15,14 +15,15 @@ type ManifestSource struct {
 	RawUri string
 }
 
-type CommonK8sLabels struct {
-}
+type CommonK8sLabels struct{}
 
 type CommonK8sAnnotations struct {
 	AppName     string
 	AppType     string
 	GeneratedBy string
 }
+
+type stringMap map[string]string
 
 func (c *CommonK8sAnnotations) GenerateAnnotations() map[string]string {
 	return map[string]string{

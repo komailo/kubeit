@@ -13,7 +13,7 @@ var (
 	// provided by .FullCommit in goreleaser
 	gitCommit = ""
 
-	//gitSummary is the output of git describe --tags --dirty --always
+	// gitSummary is the output of git describe --tags --dirty --always
 	// This is provided by .Summary in goreleaser
 	gitSummary = ""
 

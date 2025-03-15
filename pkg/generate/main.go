@@ -20,7 +20,7 @@ import (
 func GenerateManifests(generateSetOptions *GenerateOptions) ([]error, map[string][]error) {
 	sourceConfigUri := generateSetOptions.SourceConfigUri
 	logger.Infof("Generating manifests from %s", sourceConfigUri)
-	var kubeitFileResources, loaderMeta, loaderErrs, fileLoadErrs = apis.Loader(sourceConfigUri)
+	kubeitFileResources, loaderMeta, loaderErrs, fileLoadErrs := apis.Loader(sourceConfigUri)
 
 	if loaderErrs != nil {
 		return []error{loaderErrs}, fileLoadErrs
@@ -40,7 +40,6 @@ func GenerateManifests(generateSetOptions *GenerateOptions) ([]error, map[string
 		return generateErrs, nil
 	}
 	return nil, nil
-
 }
 
 func GenerateDockerLabels(
@@ -103,7 +102,7 @@ func GenerateDockerLabels(
 
 func GenerateCliDocs(rootCmd *cobra.Command, generateSetOptions *GenerateOptions) error {
 	docsDir := filepath.Join(generateSetOptions.OutputDir, "cli", common.KubeitCLIName)
-	if err := os.MkdirAll(docsDir, 0755); err != nil {
+	if err := os.MkdirAll(docsDir, 0o755); err != nil {
 		return fmt.Errorf("failed to create docs directory: %w", err)
 	}
 
@@ -117,5 +116,4 @@ func GenerateCliDocs(rootCmd *cobra.Command, generateSetOptions *GenerateOptions
 }
 
 func GenerateSchemas() {
-
 }

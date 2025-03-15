@@ -50,6 +50,5 @@ var GenerateDockerLabelsCmd = &cobra.Command{
 			logger.Errorf("Error generating docker labels: %v", finalErr)
 
 		}
-
 	},
 }

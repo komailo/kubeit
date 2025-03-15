@@ -59,20 +59,24 @@ func loadKubeitResource(data []byte) (KubeitResource, error) {
 	metaDecoder := json.NewDecoder(bytes.NewReader(data))
 
 	if err := metaDecoder.Decode(&metaOnly); err != nil {
+		logger.Debugf("Failed to unmarshal JSON on to type meta: %v", err)
 		return nil, fmt.Errorf("failed to unmarshal JSON on to type meta: %w", err)
 	}
 
 	if metaOnly.APIVersion == "" || metaOnly.Kind == "" {
+		logger.Debugf("Missing apiVersion or kind in resource")
 		return nil, fmt.Errorf("missing apiVersion or kind in resource")
 	}
 
 	// Lookup the resource type
 	kindRegistry, kindExists := TypeRegistry[metaOnly.Kind]
 	if !kindExists {
+		logger.Debugf("Unknown resource kind: %s", metaOnly.Kind)
 		return nil, fmt.Errorf("unknown resource kind: %s", metaOnly.Kind)
 	}
 	resourceType, versionExists := kindRegistry[metaOnly.APIVersion]
 	if !versionExists {
+		logger.Debugf("Unsupported apiVersion: %s", metaOnly.APIVersion)
 		return nil, fmt.Errorf("unsupported apiVersion: %s", metaOnly.APIVersion)
 	}
 
@@ -84,18 +88,21 @@ func loadKubeitResource(data []byte) (KubeitResource, error) {
 	decoder.DisallowUnknownFields()
 
 	if err := decoder.Decode(resourceInstance); err != nil {
+		logger.Debugf("Failed to parse resource: %v", err)
 		return nil, fmt.Errorf("failed to parse resource: %w", err)
 	}
 
 	// Validate the full struct
 	validate := validator.New()
 	if err := validate.Struct(resourceInstance); err != nil {
+		logger.Debugf("Validation error: %v", err)
 		return nil, fmt.Errorf("validation error: %w", err)
 	}
 
 	// Ensure resourceInstance implements KubeitResource
 	res, ok := resourceInstance.(KubeitResource)
 	if !ok {
+		logger.Debugf("Failed to assert resource as KubeitResource, got: %T", resourceInstance)
 		return nil, fmt.Errorf(
 			"failed to assert resource as KubeitResource, got: %T",
 			resourceInstance,
@@ -104,9 +111,11 @@ func loadKubeitResource(data []byte) (KubeitResource, error) {
 
 	validateErr := res.Validate()
 	if validateErr != nil {
+		logger.Debugf("resource validation error: %v", validateErr)
 		return nil, fmt.Errorf("resource validation error: %w", validateErr)
 	}
 
+	logger.Debugf("Successfully loaded resource: %s", res.GetAPIMetadata().Kind)
 	return res, nil
 }
 
@@ -145,7 +154,7 @@ func loadKubeitResources(data []byte) ([]KubeitResource, []error) {
 		}
 		resources = append(resources, resource)
 	}
-	return resources, nil
+	return resources, errors
 }
 
 // loadKubeitResourcesFromDir loads all Kubeit resources from a specified directory,
@@ -209,7 +218,7 @@ func loadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]
 		}
 
 		fileResources, fileErrors := loadKubeitResources(data)
-		if len(fileErrors) > 0 {
+		if len(fileErrors) != 0 {
 			errors[filePath] = append(errors[filePath], fileErrors...)
 		}
 
@@ -223,7 +232,6 @@ func loadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]
 
 		return nil
 	})
-
 	if err != nil {
 		errors[absDirPath] = append(
 			errors[absDirPath],
@@ -427,8 +435,6 @@ func Loader(sourceConfigUri string) ([]KubeitFileResource, LoaderMeta, error, ma
 
 	if len(loadErrs) != 0 {
 		errMsg := fmt.Sprintf("%d files have errors while loading Kubeit resources", len(loadErrs))
-		logger.Error(loadErrs)
-		logger.Error(errMsg)
 		return nil, loaderMeta, fmt.Errorf("%v", errMsg), loadErrs
 	}
 

@@ -9,7 +9,15 @@ spec:
     name: ingress-nginx
     version: ">=4.11.2"
     releaseName: my-nginx
-  rawValues:
-    commonLabels:
-      app: my-nginx
-      chart: ingress-nginx
+  values:
+    - type: mapping
+      data:
+        controller.image.tag: $dockerImageTag
+        controller.image.repository: $dockerImageRepository
+        kubeitVersion: $kubeitVersion
+    - type: raw
+      data:
+        controller:
+          image:
+            tag: 0.46.0
+            repository: quay.io/kubernetes-ingress-controller/nginx-ingress-controller

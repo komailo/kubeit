@@ -1,6 +1,15 @@
 version: "3"
 
 tasks:
+  setup:
+    desc: "Setup the project"
+    cmds:
+      - go mod download
+      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+      - go install github.com/goreleaser/goreleaser@latest
+      - go install github.com/segmentio/golines@latest
+      - go install mvdan.cc/gofumpt@latest
+
   build:
     desc: "Build the Go project"
     deps:
@@ -12,6 +21,8 @@ tasks:
   fmt:
     desc: "Format Go code"
     cmds:
+      - "$(go env GOPATH)/bin/golines --write-output ."
+      - "$(go env GOPATH)/bin/gofumpt -l -w ."
       - go fmt
 
   run:
@@ -45,16 +56,24 @@ tasks:
     deps:
       - build
 
+  ### Test operations
   test:
     desc: "Run tests"
+    deps:
+      - go-tests
     cmds:
-      # - go test -coverprofile=coverage.out ./...
-      # - go tool cover -html=coverage.out -o coverage.html
-      # - go tool cover -func=coverage.out
       - build/kubeit generate manifest file://$(pwd)/examples/kubeit-helm/
       - build/kubeit generate manifest ./examples/kubeit-helm-oci/
       - build/kubeit generate manifest foo:latest
       - build/kubeit generate manifest docker://foo:latest
+
+  go-tests:
+    desc: "Run Go tests"
+    cmds:
+      - go test -coverprofile=coverage.out ./...
+      - go tool cover -html=coverage.out -o coverage.html
+      - go tool cover -func=coverage.out
+  ### End test operations
 
   int-test:
     desc: "Run integration test"

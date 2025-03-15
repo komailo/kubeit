@@ -47,6 +47,5 @@ var GenerateManifestCmd = &cobra.Command{
 			logger.Errorf("Error generating manifests: %v", finalErr)
 
 		}
-
 	},
 }
