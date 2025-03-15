@@ -42,7 +42,7 @@ func GenerateSchemas(outputDir string) error {
 		dirPath := filepath.Join(outputDir, group, version)
 
 		// Ensure directory exists
-		if err := os.MkdirAll(dirPath, 0755); err != nil {
+		if err := os.MkdirAll(dirPath, 0o755); err != nil {
 			return fmt.Errorf("failed to create schema directory: %w", err)
 		}
 
@@ -50,7 +50,7 @@ func GenerateSchemas(outputDir string) error {
 		fileName := filepath.Join(dirPath, kind+".json")
 
 		// Write schema file
-		err = os.WriteFile(fileName, schemaJSON, 0644)
+		err = os.WriteFile(fileName, schemaJSON, 0o644)
 		if err != nil {
 			return fmt.Errorf("failed to write schema file %s: %w", fileName, err)
 		}

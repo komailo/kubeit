@@ -35,12 +35,21 @@ func uriIsDockerImgRef(uri string) (bool, string) {
 	}
 
 	// Check if the image exists
-	if exists, err := CheckDockerImageExists(ref.String()); exists && err == nil {
+	dockerClientInstance, err := NewRealDockerClient()
+	if err != nil {
+		logger.Errorf("failed to create Docker client: %v", err)
+		return false, ""
+	}
+	if exists, err := CheckDockerImageExists(dockerClientInstance, ref.String()); exists &&
+		err == nil {
 		logger.Debugf("URI %s matches Docker image pattern and exists", uri)
 		return true, ref.String()
 	}
 
-	logger.Debugf("URI %s matches Docker image pattern but does not exist - so guessing its not a Docker image ref", uri)
+	logger.Debugf(
+		"URI %s matches Docker image pattern but does not exist - so guessing its not a Docker image ref",
+		uri,
+	)
 	return false, ""
 }
 

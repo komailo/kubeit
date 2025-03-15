@@ -1,0 +1,29 @@
+linters:
+  enable:
+    - errcheck
+    - errorlint
+    - gocritic
+    - gofumpt
+    - goimports
+    - gomodguard
+    - gosimple
+    - govet
+    - ineffassign
+    - misspell
+    - perfsprint
+    - revive
+    - staticcheck
+    - testifylint
+    - thelper
+    - unparam
+    - unused
+    - usestdlibvars
+    - usetesting
+    - whitespace
+run:
+  timeout: 30m
+output:
+  formats:
+    - format: colored-line-number
+    - format: github-actions
+

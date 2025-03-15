@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/komailo/kubeit/internal/logger"
+	"github.com/komailo/kubeit/pkg/apis"
 	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
@@ -14,15 +15,18 @@ import (
 	"helm.sh/helm/v3/pkg/registry"
 )
 
-func GenerateManifestFromHelm(HelmApplication helmappv1alpha1.HelmApplication, generateSetOptions *GenerateOptions) error {
+func GenerateManifestFromHelm(
+	HelmApplication helmappv1alpha1.HelmApplication,
+	loaderMeta *apis.LoaderMeta,
+	generateSetOptions *GenerateOptions,
+) error {
 	name := HelmApplication.Spec.Chart.Name
 	releaseName := HelmApplication.Spec.Chart.ReleaseName
 	namespace := HelmApplication.Spec.Chart.Namespace
-	version := HelmApplication.Spec.Chart.Version
+	chartVersion := HelmApplication.Spec.Chart.Version
 	repository := HelmApplication.Spec.Chart.Repository
 	url := HelmApplication.Spec.Chart.URL
-	kubeVersion := "1.21.0"
-	rawValues := HelmApplication.Spec.RawValues
+	kubeVersion := generateSetOptions.KubeVersion
 
 	// Initialize Helm environment
 	settings := cli.New()
@@ -37,7 +41,7 @@ func GenerateManifestFromHelm(HelmApplication helmappv1alpha1.HelmApplication, g
 		repository,
 		name,
 		url,
-		version,
+		chartVersion,
 		generateSetOptions,
 	)
 
@@ -49,8 +53,20 @@ func GenerateManifestFromHelm(HelmApplication helmappv1alpha1.HelmApplication, g
 		logger.Fatalf("Failed to load Helm chart: %v", err)
 	}
 
-	// Prepare values and render templates
-	values := chartutil.CoalesceTables(chart.Values, rawValues.(map[string]any))
+	helmCliValuesOptions, err := generateHelmValues(
+		HelmApplication.Spec.Values,
+		loaderMeta,
+		generateSetOptions,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to generate Helm values: %w", err)
+	}
+
+	chartValues, err := helmCliValuesOptions.MergeValues(nil)
+	if err != nil {
+		return fmt.Errorf("unable to merge Helm values: %s", err)
+	}
+
 	installClient := action.NewInstall(actionConfig)
 	installClient.DryRun = true
 	installClient.ReleaseName = releaseName
@@ -64,7 +80,7 @@ func GenerateManifestFromHelm(HelmApplication helmappv1alpha1.HelmApplication, g
 		}
 		installClient.KubeVersion = parsedKubeVersion
 	}
-	release, err := installClient.Run(chart, values)
+	release, err := installClient.Run(chart, chartValues)
 	if err != nil {
 		logger.Fatalf("Failed to render templates: %v", err)
 	}
@@ -74,7 +90,7 @@ func GenerateManifestFromHelm(HelmApplication helmappv1alpha1.HelmApplication, g
 		return fmt.Errorf("No manifest file generated")
 	}
 	// TODO: Add common labels and annotations to the manifest
-	//processedManifest, err := addCommonLabelsAndAnnotationsToK8sObject(release.Manifest)
+	// processedManifest, err := addCommonLabelsAndAnnotationsToK8sObject(release.Manifest)
 	processedManifest := release.Manifest
 	if err != nil {
 		logger.Fatalf("Failed to process manifest: %v", err)

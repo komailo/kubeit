@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -19,8 +19,7 @@ import (
 	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
 	"github.com/komailo/kubeit/pkg/utils"
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"gopkg.in/yaml.v3"
+	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 // TypeRegistry holds mappings of Kind -> APIVersion -> Struct Type
@@ -36,14 +35,10 @@ var TypeRegistry = map[string]map[string]reflect.Type{
 }
 
 // loadKubeitResource dynamically loads the correct struct based on the provided single
-// YAML document.
+// JSON document.
 // It extracts the API metadata (apiVersion and kind) to determine the appropriate
-// struct type,
-// unmarshals the data into the struct, validates it, and ensures it implements the
-// KubeitResource interface.
-//
-// This function is used by LoadKubeitResources to process individual YAML documents.
-// It is safe to use LoadKubeitResources even if you have a single YAML document.
+// struct type, unmarshals the data into the struct, validates it, and ensures it
+// implements the KubeitResource interface.
 //
 // Parameters:
 //   - data: A byte slice containing the YAML data to be processed.
@@ -53,69 +48,81 @@ var TypeRegistry = map[string]map[string]reflect.Type{
 //   - error: An error encountered during the process, or nil if no error occurred.
 //
 // The function performs the following steps:
-//  1. Extracts the API metadata (apiVersion and kind) from the YAML data.
+//  1. Extracts the API metadata (apiVersion and kind) from the JSON data.
 //  2. Looks up the appropriate struct type based on the extracted metadata.
-//  3. Creates a new instance of the struct and unmarshals the YAML data into it.
+//  3. Creates a new instance of the struct and unmarshals the JSON data into it.
 //  4. Validates the unmarshaled struct using the go-playground/validator library.
 //  5. Ensures the struct implements the KubeitResource interface.
-//  6. Sets the TypeMeta field of the struct using the extracted metadata.
 func loadKubeitResource(data []byte) (KubeitResource, error) {
-	var metaOnly struct {
-		APIVersion string `json:"apiVersion" yaml:"apiVersion"`
-		Kind       string `json:"kind" yaml:"kind"`
-	}
+	var metaOnly k8smetav1.TypeMeta
 
-	// Extract API metadata first
-	if err := yaml.Unmarshal(data, &metaOnly); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal file: %w", err)
+	metaDecoder := json.NewDecoder(bytes.NewReader(data))
+
+	if err := metaDecoder.Decode(&metaOnly); err != nil {
+		logger.Debugf("Failed to unmarshal JSON on to type meta: %v", err)
+		return nil, fmt.Errorf("failed to unmarshal JSON on to type meta: %w", err)
 	}
 
 	if metaOnly.APIVersion == "" || metaOnly.Kind == "" {
+		logger.Debugf("Missing apiVersion or kind in resource")
 		return nil, fmt.Errorf("missing apiVersion or kind in resource")
 	}
 
 	// Lookup the resource type
 	kindRegistry, kindExists := TypeRegistry[metaOnly.Kind]
 	if !kindExists {
+		logger.Debugf("Unknown resource kind: %s", metaOnly.Kind)
 		return nil, fmt.Errorf("unknown resource kind: %s", metaOnly.Kind)
 	}
 	resourceType, versionExists := kindRegistry[metaOnly.APIVersion]
 	if !versionExists {
+		logger.Debugf("Unsupported apiVersion: %s", metaOnly.APIVersion)
 		return nil, fmt.Errorf("unsupported apiVersion: %s", metaOnly.APIVersion)
 	}
 
 	// Create a new instance of the resource
 	resourceInstance := reflect.New(resourceType.Elem()).Interface()
 
-	// Unmarshal data into the correct struct
-	if err := yaml.Unmarshal(data, resourceInstance); err != nil {
+	// Use JSON decoder again with DisallowUnknownFields
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+
+	if err := decoder.Decode(resourceInstance); err != nil {
+		logger.Debugf("Failed to parse resource: %v", err)
 		return nil, fmt.Errorf("failed to parse resource: %w", err)
 	}
 
 	// Validate the full struct
 	validate := validator.New()
 	if err := validate.Struct(resourceInstance); err != nil {
+		logger.Debugf("Validation error: %v", err)
 		return nil, fmt.Errorf("validation error: %w", err)
 	}
 
 	// Ensure resourceInstance implements KubeitResource
 	res, ok := resourceInstance.(KubeitResource)
 	if !ok {
-		return nil, fmt.Errorf("failed to assert resource as KubeitResource, got: %T", resourceInstance)
+		logger.Debugf("Failed to assert resource as KubeitResource, got: %T", resourceInstance)
+		return nil, fmt.Errorf(
+			"failed to assert resource as KubeitResource, got: %T",
+			resourceInstance,
+		)
 	}
 
-	// Set TypeMeta using the new interface method
-	res.SetAPIMetadata(k8smetav1.TypeMeta{
-		APIVersion: metaOnly.APIVersion,
-		Kind:       metaOnly.Kind,
-	})
+	validateErr := res.Validate()
+	if validateErr != nil {
+		logger.Debugf("resource validation error: %v", validateErr)
+		return nil, fmt.Errorf("resource validation error: %w", validateErr)
+	}
 
+	logger.Debugf("Successfully loaded resource: %s", res.GetAPIMetadata().Kind)
 	return res, nil
 }
 
-// loadKubeitResources loads Kubeit resources from a byte slice containing YAML data.
-// It supports multi-document YAML files and processes each document to extract Kubeit
-// resources.
+// loadKubeitResources loads Kubeit resources from a byte slice containing YAML or JSON
+// data.
+// It supports multi-document YAML and JSON files and processes each document to extract
+// Kubeit resources.
 //
 // Parameters:
 //   - data: A byte slice containing the YAML data to be processed.
@@ -133,28 +140,20 @@ func loadKubeitResources(data []byte) ([]KubeitResource, []error) {
 	var resources []KubeitResource
 	var errors []error
 
-	decoder := yaml.NewDecoder(bytes.NewReader(data))
+	decoder := yaml.NewYAMLOrJSONDecoder(bytes.NewReader(data), 4096)
 	for {
-		var rawDoc map[string]interface{}
-		if err := decoder.Decode(&rawDoc); err != nil {
-			if err == io.EOF {
-				break // End of YAML documents
-			}
-			errors = append(errors, fmt.Errorf("failed to decode YAML document: %w", err))
-			break
+		var rawMessage json.RawMessage
+		if err := decoder.Decode(&rawMessage); err != nil {
+			break // End of input
 		}
 
-		// Marshal the individual document back into YAML for processing
-		yamlData, _ := yaml.Marshal(rawDoc)
-		resource, err := loadKubeitResource(yamlData)
+		resource, err := loadKubeitResource(rawMessage)
 		if err != nil {
 			errors = append(errors, fmt.Errorf("failed to load resource: %w", err))
 			continue
 		}
-
 		resources = append(resources, resource)
 	}
-
 	return resources, errors
 }
 
@@ -200,7 +199,8 @@ func loadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]
 
 		// Skip directories at the root level that start with a dot
 		if info.IsDir() {
-			if strings.HasPrefix(info.Name(), ".") && filepath.Dir(filePath) == filepath.Clean(dir) {
+			if strings.HasPrefix(info.Name(), ".") &&
+				filepath.Dir(filePath) == filepath.Clean(dir) {
 				logger.Debugf("Skiping root directory to load Kubeit resources from: %s", filePath)
 				return filepath.SkipDir
 			} else {
@@ -218,7 +218,7 @@ func loadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]
 		}
 
 		fileResources, fileErrors := loadKubeitResources(data)
-		if len(fileErrors) > 0 {
+		if len(fileErrors) != 0 {
 			errors[filePath] = append(errors[filePath], fileErrors...)
 		}
 
@@ -232,9 +232,11 @@ func loadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]
 
 		return nil
 	})
-
 	if err != nil {
-		errors[absDirPath] = append(errors[absDirPath], fmt.Errorf("failed to walk directory: %w", err))
+		errors[absDirPath] = append(
+			errors[absDirPath],
+			fmt.Errorf("failed to walk directory: %w", err),
+		)
 	}
 
 	return resources, errors
@@ -253,24 +255,42 @@ func loadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]
 //     Docker image labels.
 //   - map[string][]error: A map where the keys are image references and the values are
 //     slices of errors encountered while processing the image.
-func loadKubeitResourcesFromDockerImage(imageRef string) ([]KubeitFileResource, map[string][]error) {
+func loadKubeitResourcesFromDockerImage(
+	imageRef string,
+) ([]KubeitFileResource, map[string][]error) {
 	var resources []KubeitFileResource
 	errors := make(map[string][]error)
 
-	if exists, err := utils.CheckDockerImageExists(imageRef); !exists || err != nil {
+	dockerClientInstance, err := utils.NewRealDockerClient()
+	if err != nil {
+		errors[imageRef] = append(
+			errors[imageRef],
+			fmt.Errorf("failed to create Docker client: %w", err),
+		)
+		return nil, errors
+	}
+
+	if exists, err := utils.CheckDockerImageExists(dockerClientInstance, imageRef); !exists ||
+		err != nil {
 		errors[imageRef] = append(errors[imageRef], fmt.Errorf("failed to find image: %w", err))
 		return nil, errors
 	}
 
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		errors[imageRef] = append(errors[imageRef], fmt.Errorf("failed to create Docker client: %w", err))
+		errors[imageRef] = append(
+			errors[imageRef],
+			fmt.Errorf("failed to create Docker client: %w", err),
+		)
 		return nil, errors
 	}
 
 	imageInspect, err := cli.ImageInspect(context.Background(), imageRef)
 	if err != nil {
-		errors[imageRef] = append(errors[imageRef], fmt.Errorf("failed to inspect Docker image: %w", err))
+		errors[imageRef] = append(
+			errors[imageRef],
+			fmt.Errorf("failed to inspect Docker image: %w", err),
+		)
 		return nil, errors
 	}
 
@@ -278,14 +298,20 @@ func loadKubeitResourcesFromDockerImage(imageRef string) ([]KubeitFileResource, 
 	labelKey := fmt.Sprintf(common.KubeitDomain + "/resources")
 	base64Resource, ok := imageInspect.Config.Labels[labelKey]
 	if !ok {
-		errors[imageRef] = append(errors[imageRef], fmt.Errorf("no Kubeit resources found in image: %s", imageRef))
+		errors[imageRef] = append(
+			errors[imageRef],
+			fmt.Errorf("no Kubeit resources found in image: %s", imageRef),
+		)
 		return nil, errors
 	}
 
 	// decode the base64 encoded resources
 	decodedResources, err := base64.StdEncoding.DecodeString(base64Resource)
 	if err != nil {
-		errors[imageRef] = append(errors[imageRef], fmt.Errorf("failed to decode base64 resources: %w", err))
+		errors[imageRef] = append(
+			errors[imageRef],
+			fmt.Errorf("failed to decode base64 resources: %w", err),
+		)
 		return nil, errors
 	}
 
@@ -350,7 +376,12 @@ func LogResources(kubeitFileResources []KubeitFileResource) {
 	}
 
 	for _, kubeitFileResource := range kubeitFileResources {
-		logger.Debugf("Found resource Kind: %s, API Version: %s in file: %s", kubeitFileResource.APIMetadata.Kind, kubeitFileResource.APIMetadata.APIVersion, kubeitFileResource.FileName)
+		logger.Debugf(
+			"Found resource Kind: %s, API Version: %s in file: %s",
+			kubeitFileResource.APIMetadata.Kind,
+			kubeitFileResource.APIMetadata.APIVersion,
+			kubeitFileResource.FileName,
+		)
 	}
 }
 
@@ -378,10 +409,16 @@ func LogResources(kubeitFileResources []KubeitFileResource) {
 //     directory or a Docker image or any other supported scheme.
 //  3. Returns the loaded resources, any errors encountered, and a map of
 //     file-specific errors.
-func Loader(sourceConfigUri string) ([]KubeitFileResource, error, map[string][]error) {
+func Loader(sourceConfigUri string) ([]KubeitFileResource, LoaderMeta, error, map[string][]error) {
 	sourceScheme, source, err := utils.SourceConfigUriParser(sourceConfigUri)
+
+	loaderMeta := LoaderMeta{
+		Source: source,
+		Scheme: sourceScheme,
+	}
+
 	if err != nil {
-		return nil, err, nil
+		return nil, loaderMeta, err, nil
 	}
 
 	logger.Infof("Loading Kubeit resources from %s", sourceConfigUri)
@@ -393,30 +430,21 @@ func Loader(sourceConfigUri string) ([]KubeitFileResource, error, map[string][]e
 	} else if sourceScheme == "docker" {
 		kubeitFileResources, loadErrs = loadKubeitResourcesFromDockerImage(source)
 	} else {
-		return nil, fmt.Errorf("unsupported source config URI scheme: %s", sourceScheme), nil
+		return nil, loaderMeta, fmt.Errorf("unsupported source config URI scheme: %s", sourceScheme), nil
 	}
 
 	if len(loadErrs) != 0 {
 		errMsg := fmt.Sprintf("%d files have errors while loading Kubeit resources", len(loadErrs))
-		logger.Error(errMsg)
-		return nil, fmt.Errorf("%v", errMsg), loadErrs
+		return nil, loaderMeta, fmt.Errorf("%v", errMsg), loadErrs
 	}
 
 	resourceCount := len(kubeitFileResources)
 	if resourceCount == 0 {
-		return nil, fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri), nil
-	} else {
-		kindCounts := CountResources(kubeitFileResources)
-		for kind, count := range kindCounts {
-			logger.Infof("%s: %d", kind, count)
-		}
-
-		logger.Infof("Found %d Kubeit resources", resourceCount)
+		return nil, loaderMeta, fmt.Errorf(
+			"no Kubeit resources found when traversing: %s",
+			sourceConfigUri,
+		), nil
 	}
 
-	for _, kubeitFileResource := range kubeitFileResources {
-		logger.Debugf("Found resource Kind: %s, API Version: %s in file: %s", kubeitFileResource.APIMetadata.Kind, kubeitFileResource.APIMetadata.APIVersion, kubeitFileResource.FileName)
-	}
-
-	return kubeitFileResources, nil, nil
+	return kubeitFileResources, loaderMeta, nil, nil
 }

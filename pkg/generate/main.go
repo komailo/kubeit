@@ -17,10 +17,10 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-func GenerateManifests(generateSetOptions *GenerateOptions, sourceConfigUri string) ([]error, map[string][]error) {
-
+func GenerateManifests(generateSetOptions *GenerateOptions) ([]error, map[string][]error) {
+	sourceConfigUri := generateSetOptions.SourceConfigUri
 	logger.Infof("Generating manifests from %s", sourceConfigUri)
-	var kubeitFileResources, loaderErrs, fileLoadErrs = apis.Loader(sourceConfigUri)
+	kubeitFileResources, loaderMeta, loaderErrs, fileLoadErrs := apis.Loader(sourceConfigUri)
 
 	if loaderErrs != nil {
 		return []error{loaderErrs}, fileLoadErrs
@@ -28,23 +28,27 @@ func GenerateManifests(generateSetOptions *GenerateOptions, sourceConfigUri stri
 
 	resourceCount := len(kubeitFileResources)
 	if resourceCount == 0 {
-		return []error{fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri)}, nil
+		return []error{
+			fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri),
+		}, nil
 	} else {
 		apis.LogResources(kubeitFileResources)
 	}
 
-	generateErrs := generateHelmTemplates(kubeitFileResources, generateSetOptions)
+	generateErrs := generateHelmTemplates(kubeitFileResources, loaderMeta, generateSetOptions)
 	if generateErrs != nil {
 		return generateErrs, nil
 	}
 	return nil, nil
-
 }
 
-func GenerateDockerLabels(generateSetOptions *GenerateOptions, sourceConfigUri string) ([]error, map[string][]error) {
+func GenerateDockerLabels(
+	generateSetOptions *GenerateOptions,
+	sourceConfigUri string,
+) ([]error, map[string][]error) {
 	logger.Infof("Generating Docker Labels from %s", sourceConfigUri)
 
-	kubeitFileResources, loaderErrs, fileLoadErrs := apis.Loader(sourceConfigUri)
+	kubeitFileResources, _, loaderErrs, fileLoadErrs := apis.Loader(sourceConfigUri)
 
 	if loaderErrs != nil {
 		return []error{loaderErrs}, fileLoadErrs
@@ -52,7 +56,9 @@ func GenerateDockerLabels(generateSetOptions *GenerateOptions, sourceConfigUri s
 
 	resourceCount := len(kubeitFileResources)
 	if resourceCount == 0 {
-		return []error{fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri)}, nil
+		return []error{
+			fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigUri),
+		}, nil
 	} else {
 		apis.LogResources(kubeitFileResources)
 	}
@@ -96,7 +102,7 @@ func GenerateDockerLabels(generateSetOptions *GenerateOptions, sourceConfigUri s
 
 func GenerateCliDocs(rootCmd *cobra.Command, generateSetOptions *GenerateOptions) error {
 	docsDir := filepath.Join(generateSetOptions.OutputDir, "cli", common.KubeitCLIName)
-	if err := os.MkdirAll(docsDir, 0755); err != nil {
+	if err := os.MkdirAll(docsDir, 0o755); err != nil {
 		return fmt.Errorf("failed to create docs directory: %w", err)
 	}
 
@@ -110,5 +116,4 @@ func GenerateCliDocs(rootCmd *cobra.Command, generateSetOptions *GenerateOptions
 }
 
 func GenerateSchemas() {
-
 }

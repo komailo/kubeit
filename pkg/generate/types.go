@@ -3,8 +3,10 @@ package generate
 import "github.com/komailo/kubeit/common"
 
 type GenerateOptions struct {
-	OutputDir string
-	WorkDir   string
+	OutputDir       string
+	WorkDir         string
+	SourceConfigUri string
+	KubeVersion     string
 }
 
 type ManifestSource struct {
@@ -13,14 +15,15 @@ type ManifestSource struct {
 	RawUri string
 }
 
-type CommonK8sLabels struct {
-}
+type CommonK8sLabels struct{}
 
 type CommonK8sAnnotations struct {
 	AppName     string
 	AppType     string
 	GeneratedBy string
 }
+
+type stringMap map[string]string
 
 func (c *CommonK8sAnnotations) GenerateAnnotations() map[string]string {
 	return map[string]string{

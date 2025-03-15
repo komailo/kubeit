@@ -30,7 +30,7 @@ func init() {
 		&globalSetOpts.Verbosity,
 		"verbose",
 		"v",
-		"Increase verbosity (-v = info, -vv = debug, -vvv = trace)",
+		"Increase verbosity (-v = debug, -vv = trace). By default only info, warnings and errors are shown.",
 	)
 
 	// Initialize the logger after flags are parsed
@@ -43,7 +43,7 @@ func init() {
 }
 
 func initLogger() {
-	logger.SetLevelFromVerbosity(globalSetOpts.Verbosity)
+	logger.SetLevelFromVerbosity(globalSetOpts.Verbosity + 1)
 }
 
 // NewRootCommand returns the root command instead of executing it

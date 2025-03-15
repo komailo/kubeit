@@ -1,10 +1,9 @@
 package commands
 
 import (
+	_ "embed"
 	"fmt"
 	"runtime/debug"
-
-	_ "embed" // Ensure the embed package is imported
 
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/internal/version"
@@ -57,11 +56,10 @@ var VersionCmd = &cobra.Command{
 		if !showLicense {
 			fmt.Printf("For license information, run: kubeit version --%s\n", licenseFlag)
 		}
-
 	},
 }
 
 func init() {
-	VersionCmd.PersistentFlags().BoolVar(&showLicense, licenseFlag, false, "Print the license information")
-
+	VersionCmd.PersistentFlags().
+		BoolVar(&showLicense, licenseFlag, false, "Print the license information")
 }

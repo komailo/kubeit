@@ -82,4 +82,11 @@ func init() {
 		"./.kubeit/.workdir",
 		"Working directory where temporary artifacts and results will be stored.",
 	)
+
+	GenerateCmd.PersistentFlags().StringVar(
+		&generateSetOptions.KubeVersion,
+		"kube-version",
+		"",
+		"Kubernetes server version where the generated artifacts will be deployed.",
+	)
 }
