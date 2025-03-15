@@ -24,6 +24,7 @@ tasks:
       - "$(go env GOPATH)/bin/golines --write-output ."
       - "$(go env GOPATH)/bin/gofumpt -l -w ."
       - go fmt
+      - "$(go env GOPATH)/bin/golangci-lint run --fix"
 
   run:
     desc: "Run the KubeIt CLI with arguments"
