@@ -103,7 +103,7 @@ func ManifestFromHelm(
 	}
 
 	// Define the file path where you want to write the manifest
-	manifestFilePath := filepath.Join(generateSetOptions.OutputDir, "manifest.yaml")
+	manifestFilePath := filepath.Join(generateSetOptions.OutputDir, helmApplication.Metadata.Name+".yaml")
 
 	// Write the manifest content to the file
 	err = os.WriteFile(manifestFilePath, []byte(processedManifest), os.ModePerm)
