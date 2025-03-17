@@ -35,6 +35,9 @@ var TypeRegistry = map[string]map[string]reflect.Type{
 	helmappv1alpha1.Kind: {
 		helmappv1alpha1.GroupVersion: reflect.TypeOf(&helmappv1alpha1.HelmApplication{}),
 	},
+	helmenvvaluesv1alpha1.Kind: {
+		helmenvvaluesv1alpha1.GroupVersion: reflect.TypeOf(&helmenvvaluesv1alpha1.Values{}),
+	},
 }
 
 // loadKubeitResource dynamically loads the correct struct based on the provided single
