@@ -11,6 +11,21 @@ func generateHelmTemplates(
 	generateSetOptions *Options,
 ) []error {
 	var errs []error
+	// var helmEnvValues []*helmenvvaluesv1alpha1.Values
+
+	// for _, kubeitFileResource := range kubeitFileResources {
+	// 	if kubeitFileResource.APIMetadata.Kind != helmenvvaluesv1alpha1.Kind {
+	// 		continue
+	// 	}
+
+	// 	if kubeitFileResource.APIMetadata.APIVersion != helmenvvaluesv1alpha1.GroupVersion {
+	// 		continue
+	// 	}
+
+	// 	if values, ok := kubeitFileResource.Resource.(*helmenvvaluesv1alpha1.Values); ok {
+	// 		helmEnvValues = append(helmEnvValues, values)
+	// 	}
+	// }
 
 	for _, kubeitFileResource := range kubeitFileResources {
 		if kubeitFileResource.APIMetadata.Kind != helmappv1alpha1.Kind {

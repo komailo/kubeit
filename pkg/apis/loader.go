@@ -21,6 +21,7 @@ import (
 	"github.com/komailo/kubeit/internal/logger"
 	appv1alpha1 "github.com/komailo/kubeit/pkg/apis/application/v1alpha1"
 	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
+	helmenvvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_env_values/v1alpha1"
 	"github.com/komailo/kubeit/pkg/utils"
 )
 
@@ -133,7 +134,7 @@ func loadKubeitResource(data []byte) (KubeitResource, error) {
 //   - data: A byte slice containing the YAML data to be processed.
 //
 // Returns:
-//   - []KubeitResource: A slice of KubeitResource structs extracted from the YAML data.
+//   - KubeitResources: A slice of KubeitResource structs extracted from the YAML data.
 //   - []error: A slice of errors encountered while processing the YAML data.
 //
 // The function performs the following steps:
@@ -141,8 +142,8 @@ func loadKubeitResource(data []byte) (KubeitResource, error) {
 //  2. Marshals each document back into YAML for processing.
 //  3. Loads each document as a Kubeit resource using the LoadKubeitResource function.
 //  4. Collects and returns any errors encountered during the process.
-func loadKubeitResources(data []byte) ([]KubeitResource, []error) {
-	var resources []KubeitResource
+func loadKubeitResources(data []byte) (KubeitResources, []error) {
+	var resources KubeitResources
 
 	var errors []error
 
@@ -175,7 +176,7 @@ func loadKubeitResources(data []byte) ([]KubeitResource, []error) {
 //   - dir: The root directory to start loading Kubeit resources from.
 //
 // Returns:
-//   - []KubeitFileResource:	A slice of KubeitFileResource structs, each containing
+//   - KubeitFileResources:	A slice of KubeitFileResource structs, each containing
 //     the full file path, resource, and API metadata.
 //   - map[string][]error: 		A map where the keys are file paths and the values are
 //     slices of errors encountered while processing those files.
@@ -189,8 +190,8 @@ func loadKubeitResources(data []byte) ([]KubeitResource, []error) {
 //
 // Partially loaded resources are returned in case of errors. Always check the errors
 // map to ensure all resources were loaded successfully.
-func loadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]error) {
-	var resources []KubeitFileResource
+func loadKubeitResourcesFromDir(dir string) (KubeitFileResources, map[string][]error) {
+	var resources KubeitFileResources
 
 	errors := make(map[string][]error)
 
@@ -263,14 +264,14 @@ func loadKubeitResourcesFromDir(dir string) ([]KubeitFileResource, map[string][]
 //   - imageRef: A string representing the Docker image reference.
 //
 // Returns:
-//   - []KubeitFileResource: A slice of KubeitFileResource structs extracted from the
+//   - KubeitFileResources: A slice of KubeitFileResource structs extracted from the
 //     Docker image labels.
 //   - map[string][]error: A map where the keys are image references and the values are
 //     slices of errors encountered while processing the image.
 func loadKubeitResourcesFromDockerImage(
 	imageRef string,
-) ([]KubeitFileResource, map[string][]error) {
-	var resources []KubeitFileResource
+) (KubeitFileResources, map[string][]error) {
+	var resources KubeitFileResources
 
 	errors := make(map[string][]error)
 
@@ -357,14 +358,14 @@ func loadKubeitResourcesFromDockerImage(
 // the kinds of resources and the values are the counts of each kind.
 //
 // Parameters:
-//   - resources: A slice of KubeitFileResource structs to be counted.
+//   - fileResources: A slice of KubeitFileResource structs to be counted.
 //
 // Returns:
 //   - map[string]int: 	A map where the keys are resource kinds and the values are the
 //     counts of each kind.
-func CountResources(resources []KubeitFileResource) map[string]int {
+func CountResources(fileResources KubeitFileResources) map[string]int {
 	counts := make(map[string]int)
-	for _, resource := range resources {
+	for _, resource := range fileResources {
 		counts[resource.APIMetadata.Kind]++
 	}
 
@@ -384,7 +385,7 @@ func CountResources(resources []KubeitFileResource) map[string]int {
 //  3. Logs the total number of resources found.
 //  4. Logs detailed information about each resource in debug mode, including the kind,
 //     API version, and file name.
-func LogResources(kubeitFileResources []KubeitFileResource) {
+func LogResources(kubeitFileResources KubeitFileResources) {
 	resourceCount := len(kubeitFileResources)
 	if resourceCount != 0 {
 		kindCounts := CountResources(kubeitFileResources)
@@ -429,7 +430,7 @@ func LogResources(kubeitFileResources []KubeitFileResource) {
 //     directory or a Docker image or any other supported scheme.
 //  3. Returns the loaded resources, any errors encountered, and a map of
 //     file-specific errors.
-func Loader(sourceConfigURI string) ([]KubeitFileResource, LoaderMeta, map[string][]error, error) {
+func Loader(sourceConfigURI string) (KubeitFileResources, LoaderMeta, map[string][]error, error) {
 	sourceScheme, source, err := utils.SourceConfigURIParser(sourceConfigURI)
 
 	loaderMeta := LoaderMeta{
@@ -443,7 +444,7 @@ func Loader(sourceConfigURI string) ([]KubeitFileResource, LoaderMeta, map[strin
 
 	logger.Infof("Loading Kubeit resources from %s", sourceConfigURI)
 
-	var kubeitFileResources []KubeitFileResource
+	var kubeitFileResources KubeitFileResources
 
 	var loadErrs map[string][]error
 
@@ -459,10 +460,26 @@ func Loader(sourceConfigURI string) ([]KubeitFileResource, LoaderMeta, map[strin
 		)
 	}
 
+	uniquenessErrs := kubeitFileResources.CheckResourceUniqueness()
+
+	// merge uniqueness errors with load errors
+	for file, errs := range uniquenessErrs {
+		loadErrs[file] = append(loadErrs[file], errs...)
+	}
+
 	if len(loadErrs) != 0 {
 		return nil, loaderMeta, loadErrs, fmt.Errorf(
 			"%d files have errors while loading Kubeit resources",
 			len(loadErrs),
+		)
+	}
+
+	uniquenessErr := kubeitFileResources.CheckResourceUniqueness()
+
+	if len(uniquenessErr) != 0 {
+		return nil, loaderMeta, nil, fmt.Errorf(
+			"%d resources are not unique",
+			len(uniquenessErr),
 		)
 	}
 

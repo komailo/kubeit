@@ -13,12 +13,12 @@ import (
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/internal/version"
 	"github.com/komailo/kubeit/pkg/apis"
-	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
+	helmvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_values/v1alpha1"
 	"github.com/komailo/kubeit/pkg/utils"
 )
 
 func generateHelmValues(
-	values []helmappv1alpha1.ValueEntry,
+	values []helmvaluesv1alpha1.ValueEntry,
 	loaderMeta *apis.LoaderMeta,
 	generateSetOptions *Options,
 ) (helmCliValues.Options, error) {
