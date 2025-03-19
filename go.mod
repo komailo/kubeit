@@ -5,7 +5,7 @@ go 1.23.4
 require (
 	github.com/containerd/errdefs v1.0.0
 	github.com/distribution/reference v0.6.0
-	github.com/docker/docker v28.0.1+incompatible
+	github.com/docker/docker v28.0.2+incompatible
 	github.com/go-playground/validator/v10 v10.25.0
 	github.com/invopop/jsonschema v0.13.0
 	github.com/sirupsen/logrus v1.9.3
