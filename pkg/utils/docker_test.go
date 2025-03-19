@@ -34,7 +34,7 @@ func TestCheckDockerImageExists_ImageExists(t *testing.T) {
 
 	exists, err := CheckDockerImageExists(mockClient, imageRef)
 
-	require.Error(t, err)
+	require.NoError(t, err)
 	assert.True(t, exists)
 	mockClient.AssertExpectations(t)
 }
@@ -47,7 +47,7 @@ func TestCheckDockerImageExists_ImageNotFound(t *testing.T) {
 
 	exists, err := CheckDockerImageExists(mockClient, imageRef)
 
-	require.Error(t, err)
+	require.NoError(t, err)
 	assert.False(t, exists)
 	mockClient.AssertExpectations(t)
 }

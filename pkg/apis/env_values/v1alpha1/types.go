@@ -4,12 +4,13 @@ import (
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/komailo/kubeit/common"
+	helmvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_values/v1alpha1"
 	metav1alpha1 "github.com/komailo/kubeit/pkg/apis/meta/v1alpha1"
 )
 
 const (
 	GroupVersion = common.APIVersionV1Alpha1
-	Kind         = "HelmEnvValues"
+	Kind         = "EnvValues"
 )
 
 type Values struct {
@@ -19,7 +20,7 @@ type Values struct {
 }
 
 type Spec struct {
-	Values any `json:"values" validate:"required"`
+	helmvaluesv1alpha1.Spec `json:",inline"`
 }
 
 // Method to get the API metadata

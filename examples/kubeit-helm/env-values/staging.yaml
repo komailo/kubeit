@@ -1,0 +1,16 @@
+---
+apiVersion: kubeit.komailo.github.io/v1alpha1
+kind: EnvValues
+metadata:
+  name: staging
+spec:
+  values:
+    - type: mapping
+      data:
+        controller.image.tag: envValue$dockerImageTag
+        controller.image.repository: envValue$dockerImageRepository
+    - type: raw
+      data:
+        controller:
+          image:
+            repository: envValuequay.io/kubernetes-ingress-controller/nginx-ingress-controller

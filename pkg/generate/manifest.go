@@ -14,11 +14,57 @@ import (
 
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/pkg/apis"
+	envvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/env_values/v1alpha1"
 	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
 )
 
+func ManifestsFromHelm(
+	kubeitFileResources apis.KubeitFileResources,
+	loaderMeta *apis.LoaderMeta,
+	generateSetOptions *Options,
+) []error {
+	var errs []error
+
+	var envValuesResources []*envvaluesv1alpha1.Values
+
+	if generateSetOptions.EnvNames != nil {
+		envValuesResources = apis.FilterKubeitFileResources[*envvaluesv1alpha1.Values](
+			kubeitFileResources,
+			envvaluesv1alpha1.Kind,
+			envvaluesv1alpha1.GroupVersion,
+			generateSetOptions.EnvNames,
+		)
+	}
+
+	helmApplicationResources := apis.FilterKubeitFileResources[*helmappv1alpha1.HelmApplication](
+		kubeitFileResources,
+		helmappv1alpha1.Kind,
+		helmappv1alpha1.GroupVersion,
+		nil,
+	)
+
+	if helmApplicationResources == nil {
+		return []error{errors.New("no HelmApplication resources found")}
+	}
+
+	for _, helmApplications := range helmApplicationResources {
+		err := ManifestFromHelm(
+			*helmApplications,
+			envValuesResources,
+			loaderMeta,
+			generateSetOptions,
+		)
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	return errs
+}
+
 func ManifestFromHelm(
 	helmApplication helmappv1alpha1.HelmApplication,
+	envValues []*envvaluesv1alpha1.Values,
 	loaderMeta *apis.LoaderMeta,
 	generateSetOptions *Options,
 ) error {
@@ -58,6 +104,7 @@ func ManifestFromHelm(
 
 	helmCliValuesOptions, err := generateHelmValues(
 		helmApplication.Spec.Values,
+		envValues,
 		loaderMeta,
 		generateSetOptions,
 	)
@@ -103,7 +150,10 @@ func ManifestFromHelm(
 	}
 
 	// Define the file path where you want to write the manifest
-	manifestFilePath := filepath.Join(generateSetOptions.OutputDir, helmApplication.Metadata.Name+".yaml")
+	manifestFilePath := filepath.Join(
+		generateSetOptions.OutputDir,
+		helmApplication.Metadata.Name+".yaml",
+	)
 
 	// Write the manifest content to the file
 	err = os.WriteFile(manifestFilePath, []byte(processedManifest), os.ModePerm)

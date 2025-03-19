@@ -2,7 +2,6 @@ package v1alpha1
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,7 +22,7 @@ var ValidValueTypes = []string{
 	"raw",
 }
 
-var typesWithSource = []string{"env"}
+var typesWithNoData = []string{"env"}
 
 type HelmValues struct {
 	k8smetav1.TypeMeta `json:",inline"`
@@ -36,9 +35,8 @@ type Spec struct {
 }
 
 type ValueEntry struct {
-	Type   string          `json:"type"             validate:"required"`
-	Data   json.RawMessage `json:"data,omitempty"` // Handle different structures
-	Source string          `json:"source,omitempty"`
+	Type string          `json:"type"             validate:"required"`
+	Data json.RawMessage `json:"data,omitempty"` // Handle different structures
 }
 
 type GenerateValueMappings map[string]string
@@ -60,10 +58,10 @@ func (c *Spec) Validate() error {
 				return fmt.Errorf("spec.values[*].type must be one of %s", ValidValueTypes)
 			}
 
-			if utils.Contains(typesWithSource, value.Type) {
-				if value.Source == "" {
+			if utils.Contains(typesWithNoData, value.Type) {
+				if value.Data != nil {
 					return fmt.Errorf(
-						"spec.values[*].source must be provided when type: %s",
+						"spec.values[*].data must NOT be provided when type: %s",
 						value.Type,
 					)
 				}
@@ -107,9 +105,6 @@ func (v *ValueEntry) UnmarshalJSON(data []byte) error {
 			return fmt.Errorf("invalid raw format: %w", err)
 		}
 	case "env":
-		if v.Source == "" {
-			return errors.New("source field is required when type is 'env'")
-		}
 
 	default:
 		return fmt.Errorf("unknown type: %s", v.Type)

@@ -36,7 +36,7 @@ func Manifests(generateSetOptions *Options) ([]error, map[string][]error) {
 
 	apis.LogResources(kubeitFileResources)
 
-	generateErrs := generateHelmTemplates(kubeitFileResources, loaderMeta, generateSetOptions)
+	generateErrs := ManifestsFromHelm(kubeitFileResources, &loaderMeta, generateSetOptions)
 	if generateErrs != nil {
 		return generateErrs, nil
 	}
