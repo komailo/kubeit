@@ -50,3 +50,13 @@ var GenerateManifestCmd = &cobra.Command{
 		}
 	},
 }
+
+func init() {
+	GenerateManifestCmd.PersistentFlags().StringArrayVarP(
+		&generateSetOptions.EnvNames,
+		"env-name",
+		"e",
+		nil,
+		"Name of the environment to generate manifests for, multiple environments can be provided by using args multiple times",
+	)
+}

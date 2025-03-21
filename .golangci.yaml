@@ -25,6 +25,7 @@ linters:
     - usestdlibvars
     - usetesting
     - whitespace
+    - wsl
 
     # - err113
     # - exptostd
@@ -41,7 +42,6 @@ linters:
     # - stylecheck
     # - tagalign
     # - wrapcheck
-    # - wsl
 
 run:
   timeout: 30m
@@ -66,16 +66,24 @@ linters-settings:
               - errors
   importas:
     alias:
-      - pkg: "k8s.io/apimachinery/pkg/apis/meta/v1"
-        alias: "k8smetav1"
+      - pkg: "github.com/komailo/kubeit/pkg/apis/application/v1alpha1"
+        alias: "appv1alpha1"
       - pkg: "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
         alias: "helmappv1alpha1"
-      - pkg: "helm.sh/helm/v3/pkg/cli/values"
-        alias: "helmCliValues"
-      - pkg: "k8s.io/apimachinery/pkg/util/yaml"
-        alias: "k8syaml"
+      - pkg: "github.com/komailo/kubeit/pkg/apis/helm_values/v1alpha1"
+        alias: "helmvaluesv1alpha1"
+      - pkg: "github.com/komailo/kubeit/pkg/apis/env_values/v1alpha1"
+        alias: "envvaluesv1alpha1"
+      - pkg: "github.com/komailo/kubeit/pkg/apis/meta/v1alpha1"
+        alias: "metav1alpha1"
       - pkg: "github.com/moby/moby"
         alias: "docker"
+      - pkg: "helm.sh/helm/v3/pkg/cli/values"
+        alias: "helmCliValues"
+      - pkg: "k8s.io/apimachinery/pkg/apis/meta/v1"
+        alias: "k8smetav1"
+      - pkg: "k8s.io/apimachinery/pkg/util/yaml"
+        alias: "k8syaml"
 
   nolintlint:
     require-specific: true

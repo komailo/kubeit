@@ -7,6 +7,7 @@ type Options struct {
 	WorkDir         string
 	SourceConfigURI string
 	KubeVersion     string
+	EnvNames        []string
 }
 
 type ManifestSource struct {

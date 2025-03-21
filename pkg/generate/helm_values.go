@@ -13,12 +13,15 @@ import (
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/internal/version"
 	"github.com/komailo/kubeit/pkg/apis"
-	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
+	envvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/env_values/v1alpha1"
+	helmvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_values/v1alpha1"
+
 	"github.com/komailo/kubeit/pkg/utils"
 )
 
 func generateHelmValues(
-	values []helmappv1alpha1.ValueEntry,
+	values []helmvaluesv1alpha1.ValueEntry,
+	envValues []*envvaluesv1alpha1.Values,
 	loaderMeta *apis.LoaderMeta,
 	generateSetOptions *Options,
 ) (helmCliValues.Options, error) {
@@ -41,24 +44,40 @@ func generateHelmValues(
 
 	var jsonValues []json.RawMessage
 
-	for _, value := range values {
-		switch value.Type {
-		case "env":
+	var processValues func(values []helmvaluesv1alpha1.ValueEntry) error
+	processValues = func(values []helmvaluesv1alpha1.ValueEntry) error {
+		for _, value := range values {
+			switch value.Type {
+			case "env":
+				for _, envValue := range envValues {
+					logger.Infof("Processing env values: %s", envValue.Metadata.Name)
 
-		case "raw":
-			jsonValues = append(jsonValues, value.Data)
-		case "mapping":
-			mappingValues, err := generateValueMappings(value.Data, loaderMeta)
-			if err != nil {
-				return helmCliValuesOptions, fmt.Errorf(
-					"failed to generate value mappings: %w",
-					err,
-				)
+					if err := processValues(envValue.Spec.Values); err != nil {
+						return err
+					}
+				}
+			case "raw":
+				jsonValues = append(jsonValues, value.Data)
+			case "mapping":
+				mappingValues, err := generateValueMappings(value.Data, loaderMeta)
+				if err != nil {
+					return fmt.Errorf(
+						"failed to generate value mappings: %w",
+						err,
+					)
+				}
+
+				helmCliValuesOptions.Values = append(helmCliValuesOptions.Values, mappingValues...)
+			default:
+				return fmt.Errorf("unsupported value type: %s", value.Type)
 			}
-			helmCliValuesOptions.Values = append(helmCliValuesOptions.Values, mappingValues...)
-		default:
-			return helmCliValuesOptions, fmt.Errorf("unsupported value type: %s", value.Type)
 		}
+
+		return nil
+	}
+
+	if err := processValues(values); err != nil {
+		return helmCliValuesOptions, err
 	}
 
 	// Create a YAML encoder
@@ -90,6 +109,7 @@ func generateHelmValues(
 
 	if len(jsonValues) > 0 {
 		helmCliValuesOptions.ValueFiles = append(helmCliValuesOptions.ValueFiles, valuesFile.Name())
+
 		_, err := valuesFile.Seek(0, 0)
 		if err != nil {
 			return helmCliValuesOptions, fmt.Errorf(
@@ -97,6 +117,7 @@ func generateHelmValues(
 				err,
 			)
 		}
+
 		valuesFileRead, err := os.ReadFile(valuesFile.Name())
 		if err != nil {
 			return helmCliValuesOptions, fmt.Errorf(
@@ -104,6 +125,7 @@ func generateHelmValues(
 				err,
 			)
 		}
+
 		logger.Infof("Generated Helm values from %d entries\n%s", len(jsonValues), valuesFileRead)
 	}
 
@@ -119,10 +141,13 @@ func generateValueMappings(
 	if err := json.Unmarshal(data, &mappings); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal mappings data: %w", err)
 	}
+
 	var setValues []string
 
 	varPattern := regexp.MustCompile(`\$\{([^}]+)\}|\$([a-zA-Z_][a-zA-Z0-9_]*)`)
+
 	var dockerRepo, dockerTag string
+
 	var err error
 
 	if loaderMeta.Scheme == "docker" {

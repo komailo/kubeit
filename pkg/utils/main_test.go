@@ -37,9 +37,11 @@ func TestParseDockerImage(t *testing.T) {
 					tt.wantError,
 				)
 			}
+
 			if repo != tt.expectRepo {
 				t.Errorf("ParseDockerImage(%q) repo = %q, want %q", tt.input, repo, tt.expectRepo)
 			}
+
 			if tag != tt.expectTag {
 				t.Errorf("ParseDockerImage(%q) tag = %q, want %q", tt.input, tag, tt.expectTag)
 			}

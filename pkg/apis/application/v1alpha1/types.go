@@ -2,6 +2,8 @@ package v1alpha1
 
 import (
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	metav1alpha1 "github.com/komailo/kubeit/pkg/apis/meta/v1alpha1"
 )
 
 const (
@@ -10,9 +12,9 @@ const (
 )
 
 type Application struct {
-	Metadata Metadata `json:"metadata"`
-	Spec     any      `json:"spec"`
-	k8smetav1.TypeMeta
+	k8smetav1.TypeMeta `json:",inline"`
+	Metadata           metav1alpha1.ObjectMeta `json:"metadata"`
+	Spec               any                     `json:"spec"`
 }
 
 type Metadata struct {
@@ -27,4 +29,9 @@ func (c *Application) GetAPIMetadata() k8smetav1.TypeMeta {
 // Custom validation function for Application
 func (c *Application) Validate() error {
 	return nil
+}
+
+// Method to get the metadata
+func (c *Application) GetMetadata() metav1alpha1.ObjectMeta {
+	return c.Metadata
 }

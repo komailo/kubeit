@@ -36,10 +36,11 @@ func Manifests(generateSetOptions *Options) ([]error, map[string][]error) {
 
 	apis.LogResources(kubeitFileResources)
 
-	generateErrs := generateHelmTemplates(kubeitFileResources, loaderMeta, generateSetOptions)
+	generateErrs := ManifestsFromHelm(kubeitFileResources, &loaderMeta, generateSetOptions)
 	if generateErrs != nil {
 		return generateErrs, nil
 	}
+
 	return nil, nil
 }
 
@@ -98,6 +99,7 @@ func DockerLabels(
 	}
 
 	fmt.Printf("%s", labelArgs.String())
+
 	return nil, nil
 }
 
@@ -113,6 +115,7 @@ func CliDocs(rootCmd *cobra.Command, generateSetOptions *Options) error {
 	}
 
 	fmt.Printf("CLI documentation generated in %s\n", docsDir)
+
 	return nil
 }
 
