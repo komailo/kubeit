@@ -46,7 +46,6 @@ jobs:
       - name: Ensure Coverage Does Not Drop
         run: |
           go install github.com/ory/go-acc@latest
-          go test -coverprofile=coverage.out ./...
           go tool cover -func=coverage.out | grep total | awk '{print $3}' > coverage.txt
           current_coverage=$(cat coverage.txt)
           echo "Current coverage: $current_coverage"
