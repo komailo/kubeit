@@ -35,7 +35,7 @@ type Spec struct {
 }
 
 type ValueEntry struct {
-	Type string          `json:"type"             validate:"required"`
+	Type string          `json:"type"           validate:"required"`
 	Data json.RawMessage `json:"data,omitempty"` // Handle different structures
 }
 

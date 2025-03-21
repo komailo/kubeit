@@ -51,6 +51,7 @@ func generateHelmValues(
 			case "env":
 				for _, envValue := range envValues {
 					logger.Infof("Processing env values: %s", envValue.Metadata.Name)
+
 					if err := processValues(envValue.Spec.Values); err != nil {
 						return err
 					}

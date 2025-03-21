@@ -41,7 +41,6 @@ func FilterKubeitFileResources[T any](
 		if resource, ok := fileResource.Resource.(T); ok {
 			extractedResources = append(extractedResources, resource)
 		}
-
 	}
 
 	if len(extractedResources) == 0 {
