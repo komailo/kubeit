@@ -27,3 +27,32 @@ jobs:
             echo "::error:: go.mod or go.sum is not tidy. Please run 'go mod tidy' and commit the changes."
             exit 1
           fi
+
+  go-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Set up Go
+        uses: actions/setup-go@f111f3307d8850f501ac008e886eec1fd1932a34 # v5
+        with:
+          go-version-file: go.mod
+
+      - name: Run Tests and Generate Coverage Report
+        run: |
+          go test -coverprofile=coverage.out ./...
+
+      - name: Ensure Coverage Does Not Drop
+        run: |
+          go install github.com/ory/go-acc@latest
+          go-acc ./... --coverprofile=coverage.out
+          go tool cover -func=coverage.out | grep total | awk '{print $3}' > coverage.txt
+          current_coverage=$(cat coverage.txt)
+          echo "Current coverage: $current_coverage"
+          if [ $(echo "$current_coverage < $MINIMUM_COVERAGE" | bc) -eq 1 ]; then
+            echo "::error:: Test coverage has dropped below the minimum threshold."
+            exit 1
+          fi
+        env:
+          MINIMUM_COVERAGE: 6.7 # Set your minimum coverage threshold here
