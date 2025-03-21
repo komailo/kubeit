@@ -49,7 +49,7 @@ jobs:
           go tool cover -func=coverage.out | grep total | awk '{print $3}' > coverage.txt
           current_coverage=$(cat coverage.txt)
           echo "Current coverage: $current_coverage"
-          if [ $(echo "$current_coverage < $MINIMUM_COVERAGE" | bc) -eq 1 ]; then
+          if (( $(echo "$current_coverage < $MINIMUM_COVERAGE" | bc -l) )); then
             echo "::error:: Test coverage has dropped below the minimum threshold."
             exit 1
           fi
