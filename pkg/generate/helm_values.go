@@ -14,14 +14,14 @@ import (
 	"github.com/komailo/kubeit/internal/version"
 	"github.com/komailo/kubeit/pkg/apis"
 	helmvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_values/v1alpha1"
-	envvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/named_values/v1alpha1"
+	namedvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/named_values/v1alpha1"
 
 	"github.com/komailo/kubeit/pkg/utils"
 )
 
 func generateHelmValues(
 	values []helmvaluesv1alpha1.ValueEntry,
-	envValues []*envvaluesv1alpha1.Values,
+	envValues []*namedvaluesv1alpha1.Values,
 	loaderMeta *apis.LoaderMeta,
 	generateSetOptions *Options,
 ) (helmCliValues.Options, error) {

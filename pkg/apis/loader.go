@@ -21,7 +21,7 @@ import (
 	"github.com/komailo/kubeit/internal/logger"
 	appv1alpha1 "github.com/komailo/kubeit/pkg/apis/application/v1alpha1"
 	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
-	envvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/named_values/v1alpha1"
+	namedvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/named_values/v1alpha1"
 	"github.com/komailo/kubeit/pkg/utils"
 )
 
@@ -35,8 +35,8 @@ var TypeRegistry = map[string]map[string]reflect.Type{
 	helmappv1alpha1.Kind: {
 		helmappv1alpha1.GroupVersion: reflect.TypeOf(&helmappv1alpha1.HelmApplication{}),
 	},
-	envvaluesv1alpha1.Kind: {
-		envvaluesv1alpha1.GroupVersion: reflect.TypeOf(&envvaluesv1alpha1.Values{}),
+	namedvaluesv1alpha1.Kind: {
+		namedvaluesv1alpha1.GroupVersion: reflect.TypeOf(&namedvaluesv1alpha1.Values{}),
 	},
 }
 
