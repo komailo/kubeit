@@ -27,12 +27,12 @@ func ManifestsFromHelm(
 
 	var envValuesResources []*namedvaluesv1alpha1.Values
 
-	if generateSetOptions.EnvNames != nil {
+	if generateSetOptions.NamedValues != nil {
 		envValuesResources = apis.FilterKubeitFileResources[*namedvaluesv1alpha1.Values](
 			kubeitFileResources,
 			namedvaluesv1alpha1.Kind,
 			namedvaluesv1alpha1.GroupVersion,
-			generateSetOptions.EnvNames,
+			generateSetOptions.NamedValues,
 		)
 	}
 
