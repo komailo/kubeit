@@ -2,6 +2,7 @@ package v1alpha1
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,12 +18,12 @@ const (
 )
 
 var ValidValueTypes = []string{
-	"env",
+	"named",
 	"mapping",
 	"raw",
 }
 
-var typesWithNoData = []string{"env"}
+var typesWithNoData = []string{"named"}
 
 type HelmValues struct {
 	k8smetav1.TypeMeta `json:",inline"`
@@ -104,10 +105,13 @@ func (v *ValueEntry) UnmarshalJSON(data []byte) error {
 		if err := json.Unmarshal(v.Data, &raw); err != nil {
 			return fmt.Errorf("invalid raw format: %w", err)
 		}
-	case "env":
+	case "named":
+		if v.Data != nil {
+			return errors.New("named values must not have data")
+		}
 
 	default:
-		return fmt.Errorf("unknown type: %s", v.Type)
+		return fmt.Errorf("unknown Helm values type: %s", v.Type)
 	}
 
 	return nil

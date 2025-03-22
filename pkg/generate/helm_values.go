@@ -21,7 +21,7 @@ import (
 
 func generateHelmValues(
 	values []helmvaluesv1alpha1.ValueEntry,
-	envValues []*namedvaluesv1alpha1.Values,
+	namedValues []*namedvaluesv1alpha1.Values,
 	loaderMeta *apis.LoaderMeta,
 	generateSetOptions *Options,
 ) (helmCliValues.Options, error) {
@@ -48,11 +48,11 @@ func generateHelmValues(
 	processValues = func(values []helmvaluesv1alpha1.ValueEntry) error {
 		for _, value := range values {
 			switch value.Type {
-			case "env":
-				for _, envValue := range envValues {
-					logger.Infof("Processing env values: %s", envValue.Metadata.Name)
+			case "named":
+				for _, namedValue := range namedValues {
+					logger.Infof("Processing named values: %s", namedValue.Metadata.Name)
 
-					if err := processValues(envValue.Spec.Values); err != nil {
+					if err := processValues(namedValue.Spec.Values); err != nil {
 						return err
 					}
 				}

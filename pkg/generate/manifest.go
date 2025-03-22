@@ -25,10 +25,10 @@ func ManifestsFromHelm(
 ) []error {
 	var errs []error
 
-	var envValuesResources []*namedvaluesv1alpha1.Values
+	var namedValuesResources []*namedvaluesv1alpha1.Values
 
 	if generateSetOptions.NamedValues != nil {
-		envValuesResources = apis.FilterKubeitFileResources[*namedvaluesv1alpha1.Values](
+		namedValuesResources = apis.FilterKubeitFileResources[*namedvaluesv1alpha1.Values](
 			kubeitFileResources,
 			namedvaluesv1alpha1.Kind,
 			namedvaluesv1alpha1.GroupVersion,
@@ -50,7 +50,7 @@ func ManifestsFromHelm(
 	for _, helmApplications := range helmApplicationResources {
 		err := ManifestFromHelm(
 			*helmApplications,
-			envValuesResources,
+			namedValuesResources,
 			loaderMeta,
 			generateSetOptions,
 		)
@@ -64,7 +64,7 @@ func ManifestsFromHelm(
 
 func ManifestFromHelm(
 	helmApplication helmappv1alpha1.HelmApplication,
-	envValues []*namedvaluesv1alpha1.Values,
+	namedValues []*namedvaluesv1alpha1.Values,
 	loaderMeta *apis.LoaderMeta,
 	generateSetOptions *Options,
 ) error {
@@ -104,7 +104,7 @@ func ManifestFromHelm(
 
 	helmCliValuesOptions, err := generateHelmValues(
 		helmApplication.Spec.Values,
-		envValues,
+		namedValues,
 		loaderMeta,
 		generateSetOptions,
 	)
