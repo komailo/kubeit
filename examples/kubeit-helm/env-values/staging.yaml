@@ -1,6 +1,6 @@
 ---
 apiVersion: kubeit.komailo.github.io/v1alpha1
-kind: EnvValues
+kind: NamedValues
 metadata:
   name: staging
 spec:

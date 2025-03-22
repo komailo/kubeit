@@ -53,10 +53,10 @@ var GenerateManifestCmd = &cobra.Command{
 
 func init() {
 	GenerateManifestCmd.PersistentFlags().StringArrayVarP(
-		&generateSetOptions.EnvNames,
-		"env-name",
+		&generateSetOptions.NamedValues,
+		"named-values",
 		"e",
 		nil,
-		"Name of the environment to generate manifests for, multiple environments can be provided by using args multiple times",
+		"Name of the NamedValues to use while generating manifests, multiple names can be provided by using args multiple times and they will be used in the order they are provided",
 	)
 }

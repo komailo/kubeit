@@ -10,7 +10,7 @@ import (
 
 const (
 	GroupVersion = common.APIVersionV1Alpha1
-	Kind         = "EnvValues"
+	Kind         = "NamedValues"
 )
 
 type Values struct {

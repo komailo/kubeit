@@ -14,8 +14,8 @@ import (
 
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/pkg/apis"
-	envvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/env_values/v1alpha1"
 	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
+	namedvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/named_values/v1alpha1"
 )
 
 func ManifestsFromHelm(
@@ -25,14 +25,14 @@ func ManifestsFromHelm(
 ) []error {
 	var errs []error
 
-	var envValuesResources []*envvaluesv1alpha1.Values
+	var namedValuesResources []*namedvaluesv1alpha1.Values
 
-	if generateSetOptions.EnvNames != nil {
-		envValuesResources = apis.FilterKubeitFileResources[*envvaluesv1alpha1.Values](
+	if generateSetOptions.NamedValues != nil {
+		namedValuesResources = apis.FilterKubeitFileResources[*namedvaluesv1alpha1.Values](
 			kubeitFileResources,
-			envvaluesv1alpha1.Kind,
-			envvaluesv1alpha1.GroupVersion,
-			generateSetOptions.EnvNames,
+			namedvaluesv1alpha1.Kind,
+			namedvaluesv1alpha1.GroupVersion,
+			generateSetOptions.NamedValues,
 		)
 	}
 
@@ -50,7 +50,7 @@ func ManifestsFromHelm(
 	for _, helmApplications := range helmApplicationResources {
 		err := ManifestFromHelm(
 			*helmApplications,
-			envValuesResources,
+			namedValuesResources,
 			loaderMeta,
 			generateSetOptions,
 		)
@@ -64,7 +64,7 @@ func ManifestsFromHelm(
 
 func ManifestFromHelm(
 	helmApplication helmappv1alpha1.HelmApplication,
-	envValues []*envvaluesv1alpha1.Values,
+	namedValues []*namedvaluesv1alpha1.Values,
 	loaderMeta *apis.LoaderMeta,
 	generateSetOptions *Options,
 ) error {
@@ -104,7 +104,7 @@ func ManifestFromHelm(
 
 	helmCliValuesOptions, err := generateHelmValues(
 		helmApplication.Spec.Values,
-		envValues,
+		namedValues,
 		loaderMeta,
 		generateSetOptions,
 	)

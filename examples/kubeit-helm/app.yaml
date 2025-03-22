@@ -21,4 +21,4 @@ spec:
           image:
             tag: 0.46.0
             repository: quay.io/kubernetes-ingress-controller/nginx-ingress-controller
-    - type: env
+    - type: named

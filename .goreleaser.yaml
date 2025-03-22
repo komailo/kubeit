@@ -15,6 +15,7 @@ builds:
       - "-X github.com/komailo/kubeit/internal/version.gitSummary={{ .Summary }}"
       - "-X github.com/komailo/kubeit/internal/version.gitTreeState={{ .GitTreeState }}"
       - "-X github.com/komailo/kubeit/internal/version.version={{ .Version }}"
+      #- "-s -w"
     goos:
       - linux
       - darwin
