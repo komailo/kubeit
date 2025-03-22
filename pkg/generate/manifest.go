@@ -14,8 +14,8 @@ import (
 
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/pkg/apis"
-	envvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/env_values/v1alpha1"
 	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
+	envvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/named_values/v1alpha1"
 )
 
 func ManifestsFromHelm(

@@ -13,8 +13,8 @@ import (
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/internal/version"
 	"github.com/komailo/kubeit/pkg/apis"
-	envvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/env_values/v1alpha1"
 	helmvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_values/v1alpha1"
+	envvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/named_values/v1alpha1"
 
 	"github.com/komailo/kubeit/pkg/utils"
 )

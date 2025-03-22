@@ -20,8 +20,8 @@ import (
 	"github.com/komailo/kubeit/common"
 	"github.com/komailo/kubeit/internal/logger"
 	appv1alpha1 "github.com/komailo/kubeit/pkg/apis/application/v1alpha1"
-	envvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/env_values/v1alpha1"
 	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
+	envvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/named_values/v1alpha1"
 	"github.com/komailo/kubeit/pkg/utils"
 )
 
