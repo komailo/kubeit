@@ -1,0 +1,16 @@
+---
+apiVersion: kubeit.komailo.github.io/v1alpha1
+kind: NamedValues
+metadata:
+  name: production
+spec:
+  values:
+    - type: mapping
+      data:
+        controller.image.tag: production$dockerImageTag
+        controller.image.repository: production$dockerImageRepository
+    - type: raw
+      data:
+        controller:
+          image:
+            repository: production.io/kubernetes-ingress-controller/nginx-ingress-controller

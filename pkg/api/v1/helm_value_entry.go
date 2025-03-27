@@ -1,14 +1,12 @@
-package v1alpha1
+package v1
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
 
-	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/komailo/kubeit/common"
-	metav1alpha1 "github.com/komailo/kubeit/pkg/apis/meta/v1alpha1"
+	"github.com/komailo/kubeit/pkg/api"
 	"github.com/komailo/kubeit/pkg/utils"
 )
 
@@ -26,12 +24,11 @@ var ValidValueTypes = []string{
 var typesWithNoData = []string{"named"}
 
 type HelmValues struct {
-	k8smetav1.TypeMeta `json:",inline"`
-	Metadata           metav1alpha1.ObjectMeta `json:"metadata"`
-	Spec               Spec                    `json:"spec"`
+	api.Resource `               json:",inline"`
+	Spec         HelmValuesSpec `json:"spec"`
 }
 
-type Spec struct {
+type HelmValuesSpec struct {
 	Values []ValueEntry `json:"values,omitempty"`
 }
 
@@ -42,17 +39,12 @@ type ValueEntry struct {
 
 type GenerateValueMappings map[string]string
 
-// Method to get the API metadata
-func (c *HelmValues) GetAPIMetadata() k8smetav1.TypeMeta {
-	return c.TypeMeta
-}
-
 // Custom validation function for HelmValues
-func (c *HelmValues) Validate() error {
+func (c HelmValues) Validate() error {
 	return nil
 }
 
-func (c *Spec) Validate() error {
+func (c HelmValuesSpec) Validate() error {
 	if c.Values != nil {
 		for _, value := range c.Values {
 			if !utils.Contains(ValidValueTypes, value.Type) {
@@ -115,9 +107,4 @@ func (v *ValueEntry) UnmarshalJSON(data []byte) error {
 	}
 
 	return nil
-}
-
-// Method to get the metadata
-func (c *HelmValues) GetMetadata() metav1alpha1.ObjectMeta {
-	return c.Metadata
 }
