@@ -8,8 +8,8 @@ import (
 
 // HelmApplication represents a Helm-based application deployment
 type HelmApplication struct {
-	api.Resource `                    json:",inline"`
-	Spec         HelmApplicationSpec `json:"spec"`
+	api.Resource
+	Spec HelmApplicationSpec `json:"spec"`
 }
 
 // HelmApplicationSpec defines the desired state of HelmApplication

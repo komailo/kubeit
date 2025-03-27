@@ -7,10 +7,10 @@ spec:
   values:
     - type: mapping
       data:
-        controller.image.tag: staging$dockerImageTag
-        controller.image.repository: envValue$dockerImageRepository
+        controller.image.tag: production$dockerImageTag
+        controller.image.repository: production$dockerImageRepository
     - type: raw
       data:
         controller:
           image:
-            repository: staging.io/kubernetes-ingress-controller/nginx-ingress-controller
+            repository: production.io/kubernetes-ingress-controller/nginx-ingress-controller

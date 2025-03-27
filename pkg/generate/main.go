@@ -2,7 +2,6 @@ package generate
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,13 +9,11 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
-	"sigs.k8s.io/yaml"
 
 	"github.com/komailo/kubeit/common"
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/internal/version"
 	"github.com/komailo/kubeit/pkg/api/loader"
-	"github.com/komailo/kubeit/pkg/apis"
 )
 
 func Manifests(generateSetOptions *Options) ([]error, map[string][]error) {
@@ -26,7 +23,7 @@ func Manifests(generateSetOptions *Options) ([]error, map[string][]error) {
 	loaderInt := loader.NewLoader()
 	loaderErr := loaderInt.FromSourceURI(sourceConfigURI)
 
-	if loaderErr != nil {
+	if len(loaderErr) != 0 {
 		return nil, loaderErr
 	}
 
@@ -47,47 +44,33 @@ func Manifests(generateSetOptions *Options) ([]error, map[string][]error) {
 }
 
 func DockerLabels(
-	_ *Options,
-	sourceConfigURI string,
+	generateSetOptions *Options,
 ) ([]error, map[string][]error) {
+	sourceConfigURI := generateSetOptions.SourceConfigURI
 	logger.Infof("Generating Docker Labels from %s", sourceConfigURI)
 
-	kubeitFileResources, _, fileLoadErrs, loaderErrs := apis.Loader(sourceConfigURI)
+	loaderInt := loader.NewLoader()
+	loaderErr := loaderInt.FromSourceURI(sourceConfigURI)
 
-	if loaderErrs != nil {
-		return []error{loaderErrs}, fileLoadErrs
+	if len(loaderErr) != 0 {
+		return nil, loaderErr
 	}
 
-	resourceCount := len(kubeitFileResources)
-	if resourceCount == 0 {
+	if loaderInt.ResourceCount == 0 {
 		return []error{
 			fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigURI),
 		}, nil
 	}
 
-	apis.LogResources(kubeitFileResources)
+	loaderInt.LogResources()
 
-	var kubeitResourcesYaml strings.Builder
-
-	for _, kubeitFileResource := range kubeitFileResources {
-		// each Resource in kubeitFileResource is a type, we want to combine them all
-		// to create a single yaml file string but with multiple YAML docs
-		jsonString, err := json.Marshal(kubeitFileResource.Resource)
-		if err != nil {
-			return []error{err}, nil
-		}
-
-		yamlString, err := yaml.JSONToYAML(jsonString)
-		if err != nil {
-			return []error{err}, nil
-		}
-
-		kubeitResourcesYaml.WriteString("---\n")
-		kubeitResourcesYaml.WriteString(string(yamlString))
+	marshalString, marshalErr := loaderInt.Marshal()
+	if marshalErr != nil {
+		return marshalErr, nil
 	}
 
 	// Base64-encode the YAML string
-	encodedResources := base64.StdEncoding.EncodeToString([]byte(kubeitResourcesYaml.String()))
+	encodedResources := base64.StdEncoding.EncodeToString([]byte(marshalString.String()))
 
 	// Generate the docker build command with multiple labels
 	labels := []string{
