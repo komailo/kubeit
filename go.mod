@@ -6,8 +6,6 @@ require (
 	github.com/containerd/errdefs v1.0.0
 	github.com/distribution/reference v0.6.0
 	github.com/docker/docker v28.0.4+incompatible
-	github.com/go-playground/validator/v10 v10.25.0
-	github.com/invopop/jsonschema v0.13.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
