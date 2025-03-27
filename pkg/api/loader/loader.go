@@ -338,34 +338,26 @@ func (l *Loader) Marshal() (strings.Builder, []error) {
 
 	var resourcesYaml strings.Builder
 
-	for _, resource := range l.HelmApplications {
-		// each Resource in kubeitFileResource is a type, we want to combine them all
-		// to create a single yaml file string but with multiple YAML docs
-		jsonString, err := json.Marshal(resource)
-		if err != nil {
-			return resourcesYaml, []error{err}
-		}
-
-		yamlString, err := k8syaml.JSONToYAML(jsonString)
-		if err != nil {
-			return resourcesYaml, []error{err}
-		}
-
-		resourcesYaml.WriteString("---\n")
-		resourcesYaml.WriteString(string(yamlString))
+	allResources := []api.Object{}
+	for _, r := range l.HelmApplications {
+		allResources = append(allResources, r)
 	}
 
-	for _, resource := range l.NamedValues {
-		// each Resource in kubeitFileResource is a type, we want to combine them all
-		// to create a single yaml file string but with multiple YAML docs
+	for _, r := range l.NamedValues {
+		allResources = append(allResources, r)
+	}
+
+	for _, resource := range allResources {
 		jsonString, err := json.Marshal(resource)
 		if err != nil {
-			return resourcesYaml, []error{err}
+			errs = append(errs, fmt.Errorf("failed to marshal resource: %w", err))
+			continue
 		}
 
 		yamlString, err := k8syaml.JSONToYAML(jsonString)
 		if err != nil {
-			return resourcesYaml, []error{err}
+			errs = append(errs, fmt.Errorf("failed to convert resource to yaml: %w", err))
+			continue
 		}
 
 		resourcesYaml.WriteString("---\n")
