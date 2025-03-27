@@ -25,7 +25,7 @@ import (
 // Loader handles the decoding of YAML/JSON documents into API objects
 type Loader struct {
 	// registry maps Kind and Version to the corresponding type
-	registry         map[string]map[string]api.Object
+	registry         map[string]map[string]registeredType
 	SourceMeta       api.SourceMeta
 	HelmApplications []*v1.HelmApplication
 	NamedValues      []*v1.NamedValues
@@ -33,27 +33,61 @@ type Loader struct {
 	ResourceCount    int
 }
 
+type registeredType struct {
+	New      func() api.Object
+	AppendFn func(obj api.Object)
+	GetAll   func() []api.Object
+	GetKind  func() string
+}
+
 // NewDecoder creates a new decoder with registered types
 func NewLoader() *Loader {
 	l := &Loader{
-		registry:   make(map[string]map[string]api.Object),
+		registry:   make(map[string]map[string]registeredType),
 		KindsCount: make(map[string]int),
 	}
 
-	// Register v1 types
-	l.RegisterType("HelmApplication", "kubeit.komailo.github.io/v1alpha1", &v1.HelmApplication{})
-	l.RegisterType("NamedValues", "kubeit.komailo.github.io/v1alpha1", &v1.NamedValues{})
+	register(
+		l,
+		"HelmApplication",
+		"kubeit.komailo.github.io/v1alpha1",
+		func() *v1.HelmApplication { return &v1.HelmApplication{} },
+		&l.HelmApplications,
+	)
+	register(
+		l,
+		"NamedValues",
+		"kubeit.komailo.github.io/v1alpha1",
+		func() *v1.NamedValues { return &v1.NamedValues{} },
+		&l.NamedValues,
+	)
 
 	return l
 }
 
-// RegisterType registers a new type with the decoder
-func (l *Loader) RegisterType(kind, version string, obj api.Object) {
+func register[T api.Object](l *Loader, kind, version string, constructor func() T, slicePtr *[]T) {
 	if _, ok := l.registry[kind]; !ok {
-		l.registry[kind] = make(map[string]api.Object)
+		l.registry[kind] = make(map[string]registeredType)
 	}
 
-	l.registry[kind][version] = obj
+	l.registry[kind][version] = registeredType{
+		New: func() api.Object {
+			return constructor()
+		},
+		AppendFn: func(obj api.Object) {
+			*slicePtr = append(*slicePtr, obj.(T))
+		},
+		GetAll: func() []api.Object {
+			result := make([]api.Object, len(*slicePtr))
+			for i, v := range *slicePtr {
+				result[i] = v
+			}
+			return result
+		},
+		GetKind: func() string {
+			return kind
+		},
+	}
 }
 
 // TypeMeta is used to determine the type of resource
@@ -62,40 +96,28 @@ type TypeMeta struct {
 	APIVersion string `json:"apiVersion" yaml:"apiVersion"`
 }
 
-func (l *Loader) Unmarshal(data []byte) error {
-	// First decode just the TypeMeta to determine the type
+func (l *Loader) unmarshal(data []byte) error {
 	var meta TypeMeta
 	if err := yaml.Unmarshal(data, &meta); err != nil {
 		return fmt.Errorf("failed to decode type metadata: %w", err)
 	}
 
-	// Look up the registered type
 	versionMap, ok := l.registry[meta.Kind]
 	if !ok {
 		return fmt.Errorf("unknown kind: %s", meta.Kind)
 	}
 
-	prototypeObj, ok := versionMap[meta.APIVersion]
+	rt, ok := versionMap[meta.APIVersion]
 	if !ok {
 		return fmt.Errorf("unknown version %s for kind %s", meta.APIVersion, meta.Kind)
 	}
 
-	// Unmarshal into the registered type
-	if err := yaml.Unmarshal(data, prototypeObj); err != nil {
+	obj := rt.New()
+	if err := yaml.Unmarshal(data, obj); err != nil {
 		return fmt.Errorf("failed to unmarshal %s: %w", meta.Kind, err)
 	}
 
-	// Set source metadata and add to appropriate collection
-	switch typedObj := prototypeObj.(type) {
-	case *v1.HelmApplication:
-		typedObj.SourceMeta = l.SourceMeta
-		l.HelmApplications = append(l.HelmApplications, typedObj)
-	case *v1.NamedValues:
-		typedObj.SourceMeta = l.SourceMeta
-		l.NamedValues = append(l.NamedValues, typedObj)
-	default:
-		return fmt.Errorf("unsupported type for collection: %T", prototypeObj)
-	}
+	rt.AppendFn(obj)
 
 	l.ResourceCount++
 	l.KindsCount[meta.Kind]++
@@ -104,7 +126,7 @@ func (l *Loader) Unmarshal(data []byte) error {
 }
 
 // UnmarshalMulti decodes a YAML file into the appropriate API object
-func (l *Loader) UnmarshalMulti(data []byte) []error {
+func (l *Loader) unmarshalMulti(data []byte) []error {
 	var errors []error
 
 	decoder := yaml.NewYAMLOrJSONDecoder(bytes.NewReader(data), 4096)
@@ -115,7 +137,7 @@ func (l *Loader) UnmarshalMulti(data []byte) []error {
 			break // End of input
 		}
 
-		unmarshalErr := l.Unmarshal(rawMessage)
+		unmarshalErr := l.unmarshal(rawMessage)
 		if unmarshalErr != nil {
 			errors = append(errors, unmarshalErr)
 			continue
@@ -151,7 +173,6 @@ func (l *Loader) fromDir() map[string][]error {
 			return nil
 		}
 
-		// Skip directories at the root level that start with a dot
 		if info.IsDir() {
 			if strings.HasPrefix(info.Name(), ".") &&
 				filepath.Dir(filePath) == filepath.Clean(dirPath) {
@@ -172,7 +193,7 @@ func (l *Loader) fromDir() map[string][]error {
 			return nil
 		}
 
-		unmarhsalErr := l.UnmarshalMulti(data)
+		unmarhsalErr := l.unmarshalMulti(data)
 		if unmarhsalErr != nil {
 			errs[filePath] = append(errs[filePath], unmarhsalErr...)
 		}
@@ -182,7 +203,7 @@ func (l *Loader) fromDir() map[string][]error {
 	if walkErr != nil {
 		errs[absDirPath] = append(
 			errs[absDirPath],
-			fmt.Errorf("failed to walk directory: %w", err),
+			fmt.Errorf("failed to walk directory: %w", walkErr),
 		)
 	}
 
@@ -191,7 +212,6 @@ func (l *Loader) fromDir() map[string][]error {
 
 func (l *Loader) fromDockerImage() map[string][]error {
 	imageRef := l.SourceMeta.Source
-
 	errs := make(map[string][]error)
 
 	dockerClientInstance, err := utils.NewRealDockerClient()
@@ -230,7 +250,6 @@ func (l *Loader) fromDockerImage() map[string][]error {
 		return errs
 	}
 
-	// check if kubeit.komail.io/resources is present in the labels
 	labelKey := common.KubeitDomain + "/resources"
 
 	base64Resource, ok := imageInspect.Config.Labels[labelKey]
@@ -243,7 +262,6 @@ func (l *Loader) fromDockerImage() map[string][]error {
 		return errs
 	}
 
-	// decode the base64 encoded resources
 	decodedResources, err := base64.StdEncoding.DecodeString(base64Resource)
 	if err != nil {
 		errs[imageRef] = append(
@@ -256,7 +274,7 @@ func (l *Loader) fromDockerImage() map[string][]error {
 
 	logger.Debugf("Decoded resources:\n%s", decodedResources)
 
-	unmarhsalErr := l.UnmarshalMulti(decodedResources)
+	unmarhsalErr := l.unmarshalMulti(decodedResources)
 	if unmarhsalErr != nil {
 		errs[imageRef] = append(errs[imageRef], unmarhsalErr...)
 	}
@@ -287,39 +305,64 @@ func (l *Loader) FromSourceURI(sourceConfigURI string) map[string][]error {
 	case "docker":
 		errs = l.fromDockerImage()
 	default:
-		errs["SourceConfigURIParser"] = append(errs["SourceConfigURIParser"], fmt.Errorf(
-			"unsupported source config URI scheme: %s",
-			sourceScheme,
-		))
+		errs["SourceConfigURIParser"] = append(
+			errs["SourceConfigURIParser"],
+			fmt.Errorf("unsupported source config URI scheme: %s", sourceScheme),
+		)
 
 		return errs
 	}
 
-	// uniquenessErrs := kubeitFileResources.CheckResourceUniqueness()
-
-	// // merge uniqueness errors with load errors
-	// for file, errs := range uniquenessErrs {
-	// 	loadErrs[file] = append(loadErrs[file], errs...)
-	// }
-
-	// uniquenessErr := kubeitFileResources.CheckResourceUniqueness()
-
-	// if len(uniquenessErr) != 0 {
-	// 	return nil, loaderMeta, nil, fmt.Errorf(
-	// 		"%d resources are not unique",
-	// 		len(uniquenessErr),
-	// 	)
-	// }
-
-	// resourceCount := len(kubeitFileResources)
-	// if resourceCount == 0 {
-	// 	return nil, loaderMeta, nil, fmt.Errorf(
-	// 		"no Kubeit resources found when traversing: %s",
-	// 		sourceConfigURI,
-	// 	)
-	// }
+	if len(errs) == 0 {
+		validateErrs := l.Validate()
+		if len(validateErrs) != 0 {
+			return validateErrs
+		}
+	}
 
 	return errs
+}
+
+func (l *Loader) Validate() map[string][]error {
+	// uniqueness check
+	uniquenessErrors := l.checkResourceUniqueness()
+	if len(uniquenessErrors) != 0 {
+		return uniquenessErrors
+	}
+
+	return nil
+}
+
+func (l *Loader) checkResourceUniqueness() map[string][]error {
+	errors := make(map[string][]error)
+
+	seen := make(map[string]string)
+
+	for _, versions := range l.registry {
+		for _, kind := range versions {
+			for _, resource := range kind.GetAll() {
+				name := resource.GetMetadata().Name
+				kindName := kind.GetKind()
+				uniqueKey := fmt.Sprintf("%T-%s", kindName, name)
+
+				if _, ok := seen[uniqueKey]; ok {
+					errors[resource.GetSourceMeta().Source] = append(
+						errors[resource.GetSourceMeta().Source],
+						fmt.Errorf(
+							"Resource of kind %s with name %s is not unique. Already seen in: %s",
+							kindName,
+							name,
+							seen[uniqueKey],
+						),
+					)
+				}
+
+				seen[uniqueKey] = resource.GetSourceMeta().Source
+			}
+		}
+	}
+
+	return errors
 }
 
 func (l *Loader) LogResources() {
@@ -338,36 +381,38 @@ func (l *Loader) Marshal() (strings.Builder, []error) {
 
 	var resourcesYaml strings.Builder
 
-	allResources := []api.Object{}
-	for _, r := range l.HelmApplications {
-		allResources = append(allResources, r)
-	}
+	for _, versions := range l.registry {
+		for _, rt := range versions {
+			for _, resource := range rt.GetAll() {
+				yamlStr, err := marshalResourceToYAML(resource)
+				if err != nil {
+					errs = append(errs, err)
+					continue
+				}
 
-	for _, r := range l.NamedValues {
-		allResources = append(allResources, r)
-	}
-
-	for _, resource := range allResources {
-		jsonString, err := json.Marshal(resource)
-		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to marshal resource: %w", err))
-			continue
+				resourcesYaml.WriteString("---\n")
+				resourcesYaml.WriteString(yamlStr)
+			}
 		}
-
-		yamlString, err := k8syaml.JSONToYAML(jsonString)
-		if err != nil {
-			errs = append(errs, fmt.Errorf("failed to convert resource to yaml: %w", err))
-			continue
-		}
-
-		resourcesYaml.WriteString("---\n")
-		resourcesYaml.WriteString(string(yamlString))
 	}
 
 	return resourcesYaml, errs
 }
 
-// FindResource finds resources by their names
+func marshalResourceToYAML(resource api.Object) (string, error) {
+	jsonBytes, err := json.Marshal(resource)
+	if err != nil {
+		return "", err
+	}
+
+	yamlBytes, err := k8syaml.JSONToYAML(jsonBytes)
+	if err != nil {
+		return "", err
+	}
+
+	return string(yamlBytes), nil
+}
+
 func FindResourcesByName[T api.Object](resources []T, names []string) []T {
 	var matched []T
 
