@@ -7,51 +7,33 @@ import (
 	"path/filepath"
 
 	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/chart/loader"
+	helmChartLoader "helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/chartutil"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/registry"
 
+	"github.com/komailo/kubeit/pkg/api/loader"
+
 	"github.com/komailo/kubeit/internal/logger"
-	"github.com/komailo/kubeit/pkg/apis"
-	helmappv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
-	namedvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/named_values/v1alpha1"
+	v1 "github.com/komailo/kubeit/pkg/api/v1"
 )
 
 func ManifestsFromHelm(
-	kubeitFileResources apis.KubeitFileResources,
-	loaderMeta *apis.LoaderMeta,
+	loaderInt *loader.Loader,
 	generateSetOptions *Options,
 ) []error {
 	var errs []error
 
-	var namedValuesResources []*namedvaluesv1alpha1.Values
+	helmApplicationResources := loaderInt.HelmApplications
 
-	if generateSetOptions.NamedValues != nil {
-		namedValuesResources = apis.FilterKubeitFileResources[*namedvaluesv1alpha1.Values](
-			kubeitFileResources,
-			namedvaluesv1alpha1.Kind,
-			namedvaluesv1alpha1.GroupVersion,
-			generateSetOptions.NamedValues,
-		)
-	}
-
-	helmApplicationResources := apis.FilterKubeitFileResources[*helmappv1alpha1.HelmApplication](
-		kubeitFileResources,
-		helmappv1alpha1.Kind,
-		helmappv1alpha1.GroupVersion,
-		nil,
-	)
-
-	if helmApplicationResources == nil {
+	if len(helmApplicationResources) == 0 {
 		return []error{errors.New("no HelmApplication resources found")}
 	}
 
 	for _, helmApplications := range helmApplicationResources {
 		err := ManifestFromHelm(
 			*helmApplications,
-			namedValuesResources,
-			loaderMeta,
+			loaderInt,
 			generateSetOptions,
 		)
 		if err != nil {
@@ -63,9 +45,8 @@ func ManifestsFromHelm(
 }
 
 func ManifestFromHelm(
-	helmApplication helmappv1alpha1.HelmApplication,
-	namedValues []*namedvaluesv1alpha1.Values,
-	loaderMeta *apis.LoaderMeta,
+	helmApplication v1.HelmApplication,
+	loaderInt *loader.Loader,
 	generateSetOptions *Options,
 ) error {
 	name := helmApplication.Spec.Chart.Name
@@ -97,15 +78,14 @@ func ManifestFromHelm(
 		return err
 	}
 
-	chart, err := loader.Load(chartPath)
+	chart, err := helmChartLoader.Load(chartPath)
 	if err != nil {
 		logger.Fatalf("Failed to load Helm chart: %v", err)
 	}
 
 	helmCliValuesOptions, err := generateHelmValues(
 		helmApplication.Spec.Values,
-		namedValues,
-		loaderMeta,
+		loaderInt,
 		generateSetOptions,
 	)
 	if err != nil {

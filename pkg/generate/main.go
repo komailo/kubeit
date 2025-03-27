@@ -15,28 +15,30 @@ import (
 	"github.com/komailo/kubeit/common"
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/internal/version"
+	"github.com/komailo/kubeit/pkg/api/loader"
 	"github.com/komailo/kubeit/pkg/apis"
 )
 
 func Manifests(generateSetOptions *Options) ([]error, map[string][]error) {
 	sourceConfigURI := generateSetOptions.SourceConfigURI
 	logger.Infof("Generating manifests from %s", sourceConfigURI)
-	kubeitFileResources, loaderMeta, fileLoadErrs, loaderErrs := apis.Loader(sourceConfigURI)
 
-	if loaderErrs != nil {
-		return []error{loaderErrs}, fileLoadErrs
+	loaderInt := loader.NewLoader()
+	loaderErr := loaderInt.FromSourceURI(sourceConfigURI)
+
+	if loaderErr != nil {
+		return nil, loaderErr
 	}
 
-	resourceCount := len(kubeitFileResources)
-	if resourceCount == 0 {
+	if loaderInt.ResourceCount == 0 {
 		return []error{
 			fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigURI),
 		}, nil
 	}
 
-	apis.LogResources(kubeitFileResources)
+	loaderInt.LogResources()
 
-	generateErrs := ManifestsFromHelm(kubeitFileResources, &loaderMeta, generateSetOptions)
+	generateErrs := ManifestsFromHelm(loaderInt, generateSetOptions)
 	if generateErrs != nil {
 		return generateErrs, nil
 	}

@@ -12,17 +12,15 @@ import (
 
 	"github.com/komailo/kubeit/internal/logger"
 	"github.com/komailo/kubeit/internal/version"
-	"github.com/komailo/kubeit/pkg/apis"
-	helmvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/helm_values/v1alpha1"
-	namedvaluesv1alpha1 "github.com/komailo/kubeit/pkg/apis/named_values/v1alpha1"
+	"github.com/komailo/kubeit/pkg/api/loader"
+	v1 "github.com/komailo/kubeit/pkg/api/v1"
 
 	"github.com/komailo/kubeit/pkg/utils"
 )
 
 func generateHelmValues(
-	values []helmvaluesv1alpha1.ValueEntry,
-	namedValues []*namedvaluesv1alpha1.Values,
-	loaderMeta *apis.LoaderMeta,
+	values []v1.ValueEntry,
+	loaderInt *loader.Loader,
 	generateSetOptions *Options,
 ) (helmCliValues.Options, error) {
 	valuesFile, err := os.CreateTemp(generateSetOptions.WorkDir, "helm-values-*.yaml")
@@ -42,14 +40,23 @@ func generateHelmValues(
 		LiteralValues: []string{},
 	}
 
+	var filteredNamedValues []*v1.NamedValues
+
+	if generateSetOptions.NamedValues != nil {
+		filteredNamedValues = loader.FindResourcesByName(
+			loaderInt.NamedValues,
+			generateSetOptions.NamedValues,
+		)
+	}
+
 	var jsonValues []json.RawMessage
 
-	var processValues func(values []helmvaluesv1alpha1.ValueEntry) error
-	processValues = func(values []helmvaluesv1alpha1.ValueEntry) error {
+	var processValues func(values []v1.ValueEntry) error
+	processValues = func(values []v1.ValueEntry) error {
 		for _, value := range values {
 			switch value.Type {
 			case "named":
-				for _, namedValue := range namedValues {
+				for _, namedValue := range filteredNamedValues {
 					logger.Infof("Processing named values: %s", namedValue.Metadata.Name)
 
 					if err := processValues(namedValue.Spec.Values); err != nil {
@@ -59,7 +66,7 @@ func generateHelmValues(
 			case "raw":
 				jsonValues = append(jsonValues, value.Data)
 			case "mapping":
-				mappingValues, err := generateValueMappings(value.Data, loaderMeta)
+				mappingValues, err := generateValueMappings(value.Data, loaderInt)
 				if err != nil {
 					return fmt.Errorf(
 						"failed to generate value mappings: %w",
@@ -135,7 +142,7 @@ func generateHelmValues(
 // The function will substitute $VAR or ${VAR} with the actual value
 func generateValueMappings(
 	data json.RawMessage,
-	loaderMeta *apis.LoaderMeta,
+	loaderInt *loader.Loader,
 ) ([]string, error) {
 	var mappings stringMap
 	if err := json.Unmarshal(data, &mappings); err != nil {
@@ -150,8 +157,8 @@ func generateValueMappings(
 
 	var err error
 
-	if loaderMeta.Scheme == "docker" {
-		dockerRepo, dockerTag, err = utils.ParseDockerImage(loaderMeta.Source)
+	if loaderInt.SourceMeta.Scheme == "docker" {
+		dockerRepo, dockerTag, err = utils.ParseDockerImage(loaderInt.SourceMeta.Source)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse Docker image: %w", err)
 		}
