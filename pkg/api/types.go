@@ -4,7 +4,7 @@ import (
 	k8smetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Object is an interface that all API types must implement
+// Object is an interface that all API types must implement. Some are implemeted by BaseObjects
 type Object interface {
 	GetObjectMeta() ObjectMeta
 	GetTypeMeta() k8smetav1.TypeMeta
@@ -17,11 +17,12 @@ type ObjectMeta struct {
 	Name string `json:"name"`
 }
 
-// BaseObject is the base type that all resource types should embed
+// BaseObject is the base type that all resource types must embed
 type BaseObject struct {
 	k8smetav1.TypeMeta `json:",inline"`
 	Metadata           ObjectMeta `json:"metadata"`
 	SourceMeta         SourceMeta
+	Spec               any `json:"spec,omitempty"`
 }
 
 // SourceMeta contains metadata about the source of the object
