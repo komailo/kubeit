@@ -12,7 +12,7 @@ func TestResource_GetTypeMeta(t *testing.T) {
 		Kind:       "TestKind",
 		APIVersion: "v1",
 	}
-	resource := Resource{
+	resource := BaseObject{
 		TypeMeta: typeMeta,
 	}
 
@@ -22,10 +22,10 @@ func TestResource_GetTypeMeta(t *testing.T) {
 }
 
 func TestResource_GetResourceMeta(t *testing.T) {
-	objectMeta := ResourceMeta{
+	objectMeta := ObjectMeta{
 		Name: "test-object",
 	}
-	resource := Resource{
+	resource := BaseObject{
 		Metadata: objectMeta,
 	}
 
@@ -40,7 +40,7 @@ func TestResource_GetSourceMeta(t *testing.T) {
 		Source:    "example-source",
 		Scheme:    "https",
 	}
-	resource := Resource{
+	resource := BaseObject{
 		SourceMeta: sourceMeta,
 	}
 
@@ -55,7 +55,7 @@ func TestResourceValidate(t *testing.T) {
 		Source:    "example-source",
 		Scheme:    "https",
 	}
-	resource := Resource{
+	resource := BaseObject{
 		SourceMeta: sourceMeta,
 	}
 
@@ -65,7 +65,7 @@ func TestResourceValidate(t *testing.T) {
 }
 
 func TestResource_ImplementsObjectInterface(t *testing.T) {
-	resource := Resource{}
+	resource := BaseObject{}
 
 	var obj Object = resource // This will fail to compile if Resource does not implement Object
 

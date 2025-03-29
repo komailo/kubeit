@@ -24,8 +24,8 @@ var ValidValueTypes = []string{
 var typesWithNoData = []string{"named"}
 
 type HelmValues struct {
-	api.Resource `               json:",inline"`
-	Spec         HelmValuesSpec `json:"spec"`
+	api.BaseObject `               json:",inline"`
+	Spec           HelmValuesSpec `json:"spec"`
 }
 
 type HelmValuesSpec struct {

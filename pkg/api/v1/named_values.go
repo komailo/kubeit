@@ -5,8 +5,8 @@ import (
 )
 
 type NamedValues struct {
-	api.Resource `                json:",inline"`
-	Spec         NamedValuesSpec `json:"spec"`
+	api.BaseObject `                json:",inline"`
+	Spec           NamedValuesSpec `json:"spec"`
 }
 
 type NamedValuesSpec struct {

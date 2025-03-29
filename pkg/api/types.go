@@ -6,21 +6,21 @@ import (
 
 // Object is an interface that all API types must implement
 type Object interface {
-	GetObjectMeta() ResourceMeta
+	GetObjectMeta() ObjectMeta
 	GetTypeMeta() k8smetav1.TypeMeta
 	GetSourceMeta() SourceMeta
 	Validate() error
 }
 
-// ResourceMeta contains metadata about the object
-type ResourceMeta struct {
+// ObjectMeta contains metadata about the object
+type ObjectMeta struct {
 	Name string `json:"name"`
 }
 
-// Resource is the base type that all resource types should embed
-type Resource struct {
+// BaseObject is the base type that all resource types should embed
+type BaseObject struct {
 	k8smetav1.TypeMeta `json:",inline"`
-	Metadata           ResourceMeta `json:"metadata"`
+	Metadata           ObjectMeta `json:"metadata"`
 	SourceMeta         SourceMeta
 }
 
@@ -32,19 +32,19 @@ type SourceMeta struct {
 }
 
 // GetTypeMeta implements the Object interface
-func (r Resource) GetTypeMeta() k8smetav1.TypeMeta {
+func (r BaseObject) GetTypeMeta() k8smetav1.TypeMeta {
 	return r.TypeMeta
 }
 
 // GetObjectMeta implements the Object interface
-func (r Resource) GetObjectMeta() ResourceMeta {
+func (r BaseObject) GetObjectMeta() ObjectMeta {
 	return r.Metadata
 }
 
-func (r Resource) GetSourceMeta() SourceMeta {
+func (r BaseObject) GetSourceMeta() SourceMeta {
 	return r.SourceMeta
 }
 
-func (r Resource) Validate() error {
+func (r BaseObject) Validate() error {
 	return nil
 }
