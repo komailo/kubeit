@@ -12,13 +12,3 @@ type NamedValues struct {
 type NamedValuesSpec struct {
 	Values []ValueEntry `json:"values" validate:"required"`
 }
-
-// Custom validation function for HelmEnvValues
-func (c *NamedValues) Validate() error {
-	return nil
-}
-
-// GetMetadata returns the metadata of the NamedValues
-func (c *NamedValues) GetMetadata() api.ObjectMeta {
-	return c.Metadata
-}

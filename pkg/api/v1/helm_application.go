@@ -37,8 +37,3 @@ func (c HelmApplication) Validate() error {
 
 	return nil
 }
-
-// GetMetadata returns the metadata of the NamedValues
-func (c HelmApplication) GetMetadata() api.ObjectMeta {
-	return c.Metadata
-}

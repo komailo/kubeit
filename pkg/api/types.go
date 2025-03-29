@@ -6,9 +6,10 @@ import (
 
 // Object is an interface that all API types must implement
 type Object interface {
-	GetMetadata() ObjectMeta
+	GetObjectMeta() ObjectMeta
 	GetTypeMeta() k8smetav1.TypeMeta
 	GetSourceMeta() SourceMeta
+	Validate() error
 }
 
 // ObjectMeta contains metadata about the object
@@ -42,4 +43,8 @@ func (r Resource) GetObjectMeta() ObjectMeta {
 
 func (r Resource) GetSourceMeta() SourceMeta {
 	return r.SourceMeta
+}
+
+func (r Resource) Validate() error {
+	return nil
 }
