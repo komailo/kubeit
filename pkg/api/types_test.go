@@ -21,8 +21,8 @@ func TestResource_GetTypeMeta(t *testing.T) {
 	assert.Equal(t, typeMeta, result, "GetTypeMeta should return the correct TypeMeta")
 }
 
-func TestResource_GetObjectMeta(t *testing.T) {
-	objectMeta := ObjectMeta{
+func TestResource_GetResourceMeta(t *testing.T) {
+	objectMeta := ResourceMeta{
 		Name: "test-object",
 	}
 	resource := Resource{

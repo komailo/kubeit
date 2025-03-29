@@ -341,7 +341,7 @@ func (l *Loader) checkResourceUniqueness() map[string][]error {
 	for _, versions := range l.registry {
 		for _, kind := range versions {
 			for _, resource := range kind.GetAll() {
-				name := resource.GetMetadata().Name
+				name := resource.GetObjectMeta().Name
 				kindName := kind.GetKind()
 				uniqueKey := fmt.Sprintf("%T-%s", kindName, name)
 
@@ -417,7 +417,7 @@ func FindResourcesByName[T api.Object](resources []T, names []string) []T {
 	var matched []T
 
 	for _, res := range resources {
-		if utils.Contains(names, res.GetMetadata().Name) {
+		if utils.Contains(names, res.GetObjectMeta().Name) {
 			matched = append(matched, res)
 		}
 	}
