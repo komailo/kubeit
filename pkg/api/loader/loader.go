@@ -149,25 +149,10 @@ func (l *Loader) unmarshalMulti(data []byte) []error {
 
 func (l *Loader) fromDir() map[string][]error {
 	dirPath := l.SourceMeta.Source
-	scheme := l.SourceMeta.Scheme
-
-	if scheme != "file" {
-		logger.Fatalf("fromDir called with non-file source: %s", l.SourceMeta.Scheme)
-	}
 
 	errs := make(map[string][]error)
 
-	absDirPath, err := filepath.Abs(dirPath)
-	if err != nil {
-		errs[dirPath] = append(
-			errs[dirPath],
-			fmt.Errorf("failed to get absolute path for file: %w", err),
-		)
-
-		return errs
-	}
-
-	walkErr := filepath.Walk(absDirPath, func(filePath string, info os.FileInfo, err error) error {
+	walkErr := filepath.Walk(dirPath, func(filePath string, info os.FileInfo, err error) error {
 		if err != nil {
 			errs[filePath] = append(errs[filePath], fmt.Errorf("error accessing file: %w", err))
 			return nil
@@ -201,8 +186,8 @@ func (l *Loader) fromDir() map[string][]error {
 		return nil
 	})
 	if walkErr != nil {
-		errs[absDirPath] = append(
-			errs[absDirPath],
+		errs[dirPath] = append(
+			errs[dirPath],
 			fmt.Errorf("failed to walk directory: %w", walkErr),
 		)
 	}
@@ -282,57 +267,6 @@ func (l *Loader) fromDockerImage() map[string][]error {
 	return errs
 }
 
-func (l *Loader) FromSourceURI(sourceConfigURI string) map[string][]error {
-	logger.Infof("Loading Kubeit resources from %s", sourceConfigURI)
-
-	errs := make(map[string][]error)
-
-	sourceScheme, source, err := utils.SourceConfigURIParser(sourceConfigURI)
-	if err != nil {
-		errs["SourceConfigURIParser"] = append(errs["SourceConfigURIParser"], err)
-		return errs
-	}
-
-	l.SourceMeta = api.SourceMeta{
-		Scheme:    sourceScheme,
-		SourceURI: sourceConfigURI,
-		Source:    source,
-	}
-
-	switch sourceScheme {
-	case "file":
-		errs = l.fromDir()
-	case "docker":
-		errs = l.fromDockerImage()
-	default:
-		errs["SourceConfigURIParser"] = append(
-			errs["SourceConfigURIParser"],
-			fmt.Errorf("unsupported source config URI scheme: %s", sourceScheme),
-		)
-
-		return errs
-	}
-
-	if len(errs) == 0 {
-		validateErrs := l.Validate()
-		if len(validateErrs) != 0 {
-			return validateErrs
-		}
-	}
-
-	return errs
-}
-
-func (l *Loader) Validate() map[string][]error {
-	// uniqueness check
-	uniquenessErrors := l.checkResourceUniqueness()
-	if len(uniquenessErrors) != 0 {
-		return uniquenessErrors
-	}
-
-	return nil
-}
-
 func (l *Loader) checkResourceUniqueness() map[string][]error {
 	errors := make(map[string][]error)
 
@@ -397,6 +331,51 @@ func (l *Loader) Marshal() (strings.Builder, []error) {
 	}
 
 	return resourcesYaml, errs
+}
+
+func (l *Loader) FromSourceURI(sourceConfigURI string) map[string][]error {
+	logger.Infof("Loading Kubeit resources from %s", sourceConfigURI)
+
+	errs := make(map[string][]error)
+
+	sourceScheme, source, err := utils.SourceConfigURIParser(sourceConfigURI)
+	if err != nil {
+		errs["SourceConfigURIParser"] = append(errs["SourceConfigURIParser"], err)
+		return errs
+	}
+
+	l.SourceMeta = api.SourceMeta{
+		Scheme:    sourceScheme,
+		SourceURI: sourceConfigURI,
+		Source:    source,
+	}
+
+	switch sourceScheme {
+	case "file":
+		errs = l.fromDir()
+	case "docker":
+		errs = l.fromDockerImage()
+	default: // this should never happen as SourceConfigURIParser would error out
+	}
+
+	if len(errs) == 0 {
+		validateErrs := l.Validate()
+		if len(validateErrs) != 0 {
+			return validateErrs
+		}
+	}
+
+	return errs
+}
+
+func (l *Loader) Validate() map[string][]error {
+	// uniqueness check
+	uniquenessErrors := l.checkResourceUniqueness()
+	if len(uniquenessErrors) != 0 {
+		return uniquenessErrors
+	}
+
+	return nil
 }
 
 func marshalResourceToYAML(resource api.Object) (string, error) {

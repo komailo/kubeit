@@ -1,0 +1,69 @@
+---
+SourceMeta:
+  Scheme: ""
+  Source: ""
+  SourceURI: ""
+apiVersion: kubeit.komailo.github.io/v1alpha1
+kind: HelmApplication
+metadata:
+  name: valid-test-app
+spec:
+  chart:
+    name: app-chart
+    releaseName: app-chart
+    repository: https://my-chart-repo.com
+    version: ">=4.11.2"
+  values:
+    - data:
+        image.repository: $dockerImageRepository
+        image.tag: $dockerImageTag
+        kubeitVersion: $kubeitVersion
+      type: mapping
+    - data:
+        global:
+          ingress:
+            enabled: false
+      type: raw
+    - type: named
+---
+SourceMeta:
+  Scheme: ""
+  Source: ""
+  SourceURI: ""
+apiVersion: kubeit.komailo.github.io/v1alpha1
+kind: NamedValues
+metadata:
+  name: staging
+spec:
+  values:
+    - data:
+        global.env: staging
+      type: mapping
+---
+SourceMeta:
+  Scheme: ""
+  Source: ""
+  SourceURI: ""
+apiVersion: kubeit.komailo.github.io/v1alpha1
+kind: NamedValues
+metadata:
+  name: production
+spec:
+  values:
+    - data:
+        global.env: production
+      type: mapping
+---
+SourceMeta:
+  Scheme: ""
+  Source: ""
+  SourceURI: ""
+apiVersion: kubeit.komailo.github.io/v1alpha1
+kind: NamedValues
+metadata:
+  name: canary
+spec:
+  values:
+    - data:
+        global.env: canary
+      type: mapping

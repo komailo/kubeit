@@ -1,0 +1,8 @@
+# this file won't be included as it starts with a dot.
+---
+apiVersion: kubeit.komailo.github.io/v1alpha1
+kind: HelmApplication
+metadata:
+  name: valid-test-app
+spec:
+  invalid-key: true

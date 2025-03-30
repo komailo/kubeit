@@ -1,0 +1,30 @@
+---
+apiVersion: kubeit.komailo.github.io/v1alpha1
+kind: NamedValues
+metadata:
+  name: staging
+spec:
+  values:
+    - type: mapping
+      data:
+        global.env: staging
+---
+apiVersion: kubeit.komailo.github.io/v1alpha1
+kind: NamedValues
+metadata:
+  name: production
+spec:
+  values:
+    - type: mapping
+      data:
+        global.env: production
+---
+apiVersion: kubeit.komailo.github.io/v1alpha1
+kind: NamedValues
+metadata:
+  name: canary
+spec:
+  values:
+    - type: mapping
+      data:
+        global.env: canary

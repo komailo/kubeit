@@ -61,7 +61,11 @@ func TestResourceValidate(t *testing.T) {
 
 	err := resource.Validate()
 
-	assert.NoError(t, err, "Validate should return no error as its not implemented by base Resource")
+	assert.NoError(
+		t,
+		err,
+		"Validate should return no error as its not implemented by base Resource",
+	)
 }
 
 func TestResource_ImplementsObjectInterface(t *testing.T) {
