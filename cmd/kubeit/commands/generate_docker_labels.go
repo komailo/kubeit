@@ -18,7 +18,7 @@ var GenerateDockerLabelsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		generateSetOptions.SourceConfigURI = args[0]
 
-		generateErrs, loadFileErrs := generate.DockerLabels(
+		labelArgs, generateErrs, loadFileErrs := generate.DockerLabels(
 			&generateSetOptions,
 		)
 
@@ -50,5 +50,8 @@ var GenerateDockerLabelsCmd = &cobra.Command{
 			logger.Errorf("Error generating docker labels: %v", finalErr)
 
 		}
+
+		fmt.Print(labelArgs)
+
 	},
 }
