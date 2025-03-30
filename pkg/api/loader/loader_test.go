@@ -237,7 +237,11 @@ func TestLoader_Marshal(t *testing.T) {
 			assert.Empty(t, marshalErrs, "Expected no errors but got some")
 
 			var marshalledData []json.RawMessage
-			decoder := yaml.NewYAMLOrJSONDecoder(bytes.NewReader([]byte(marshalledDataStr.String())), 4096)
+
+			decoder := yaml.NewYAMLOrJSONDecoder(
+				bytes.NewReader([]byte(marshalledDataStr.String())),
+				4096,
+			)
 
 			for {
 				var rawMessage json.RawMessage
