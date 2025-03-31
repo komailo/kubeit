@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/containerd/errdefs"
@@ -24,7 +25,11 @@ func (m *MockDockerClient) ImageInspect(
 	imageRef string,
 ) (image.InspectResponse, error) {
 	args := m.Called(ctx, imageRef)
-	return args.Get(0).(image.InspectResponse), args.Error(1)
+
+	return args.Get(0).(image.InspectResponse), fmt.Errorf(
+		"mock error while inspecting image: %w",
+		args.Error(1),
+	)
 }
 
 func TestCheckDockerImageExists_ImageExists(t *testing.T) {

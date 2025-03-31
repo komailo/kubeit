@@ -34,7 +34,12 @@ func (r *RealDockerClient) ImageInspect(
 	ctx context.Context,
 	imageRef string,
 ) (image.InspectResponse, error) {
-	return r.client.ImageInspect(ctx, imageRef)
+	inspectResponse, err := r.client.ImageInspect(ctx, imageRef)
+	if err != nil {
+		return inspectResponse, fmt.Errorf("failed to inspect image: %w", err)
+	}
+
+	return inspectResponse, nil
 }
 
 // CheckDockerImageExists checks if a Docker image exists

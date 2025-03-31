@@ -381,12 +381,15 @@ func (l *Loader) Validate() map[string][]error {
 func marshalResourceToYAML(resource api.Object) (string, error) {
 	jsonBytes, err := json.Marshal(resource)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("error marshalling while marshalling resource to yaml: %w", err)
 	}
 
 	yamlBytes, err := k8syaml.JSONToYAML(jsonBytes)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf(
+			"error doing json to yaml while marshalling resource to yaml: %w",
+			err,
+		)
 	}
 
 	return string(yamlBytes), nil

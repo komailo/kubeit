@@ -52,6 +52,5 @@ var GenerateDockerLabelsCmd = &cobra.Command{
 		}
 
 		fmt.Print(labelArgs)
-
 	},
 }

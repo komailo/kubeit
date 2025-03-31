@@ -80,7 +80,7 @@ func (v *ValueEntry) UnmarshalJSON(data []byte) error {
 	}
 
 	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
+		return fmt.Errorf("error while unmarshalling: %w", err)
 	}
 
 	v.Data = aux.Data // Preserve raw data for later decoding
