@@ -26,10 +26,14 @@ func (m *MockDockerClient) ImageInspect(
 ) (image.InspectResponse, error) {
 	args := m.Called(ctx, imageRef)
 
-	return args.Get(0).(image.InspectResponse), fmt.Errorf(
-		"mock error while inspecting image: %w",
-		args.Error(1),
-	)
+	if args.Error(1) != nil {
+		return args.Get(0).(image.InspectResponse), fmt.Errorf(
+			"mock error while inspecting image: %w",
+			args.Error(1),
+		)
+	}
+
+	return args.Get(0).(image.InspectResponse), nil
 }
 
 func TestCheckDockerImageExists_ImageExists(t *testing.T) {

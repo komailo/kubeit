@@ -64,38 +64,36 @@ func SourceConfigURIParser(uri string) (string, string, error) {
 	var scheme, path string
 
 	var ok bool
-	// check to see if a scheme:// is present in the uri
+
 	schemeRegex := regexp.MustCompile(`^([a-zA-Z][a-zA-Z0-9+.-]*):\/\/(.*)`)
 
 	matches := schemeRegex.FindStringSubmatch(uri)
-	if len(matches) > 1 {
+	if len(matches) == 3 {
 		scheme = matches[1]
 		path = matches[2]
 
-		knownSchemes := map[string]bool{
-			"docker": true,
-			"file":   true,
-		}
-		if !knownSchemes[scheme] {
-			return "", "", fmt.Errorf("unknown scheme %s", scheme)
-		}
-
-		if scheme == "file" {
+		switch scheme {
+		case "file":
 			absPath, err := filepath.Abs(path)
 			if err != nil {
-				logger.Warnf("unable to get absolute path for file %s", path)
-				return scheme, "", nil
+				return scheme, path, fmt.Errorf("unable to get absolute path for file %s", path)
 			}
+			fmt.Printf("File %s found so URI does look like a file", absPath)
 
 			return scheme, absPath, nil
-		} else if scheme == "docker" {
+		case "docker":
 			ref, err := reference.ParseNormalizedNamed(path)
 			if err != nil {
-				logger.Debugf("unable to parse and normalize Docker path: %s %v", path, err)
-				return scheme, "", nil
+				return scheme, path, fmt.Errorf(
+					"unable to parse and normalize Docker path: %s %w",
+					path,
+					err,
+				)
 			}
 
 			return scheme, ref.String(), nil
+		default:
+			return scheme, path, fmt.Errorf("unknown scheme %s", scheme)
 		}
 	}
 

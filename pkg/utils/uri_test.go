@@ -55,18 +55,14 @@ func TestSourceConfigURIParser(t *testing.T) {
 			expectedError:  "",
 		},
 		{
-			name:           "Unknown scheme",
-			uri:            "unknown://example",
-			expectedScheme: "",
-			expectedPath:   "",
-			expectedError:  "unknown scheme unknown",
+			name:          "Unknown scheme",
+			uri:           "unknown://example",
+			expectedError: "unknown scheme unknown",
 		},
 		{
-			name:           "Invalid URI",
-			uri:            "invalid-uri",
-			expectedScheme: "",
-			expectedPath:   "",
-			expectedError:  "URI invalid-uri is not guessable",
+			name:          "Invalid URI",
+			uri:           "invalid-uri",
+			expectedError: "URI invalid-uri is not guessable",
 		},
 	}
 
@@ -74,9 +70,13 @@ func TestSourceConfigURIParser(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			scheme, path, err := SourceConfigURIParser(tc.uri)
 
-			// Check the scheme and path
-			assert.Equal(t, tc.expectedScheme, scheme, "Expected scheme mismatch")
-			assert.Equal(t, tc.expectedPath, path, "Expected path mismatch")
+			if tc.expectedScheme != "" {
+				assert.Equal(t, tc.expectedScheme, scheme, "Expected scheme mismatch")
+			}
+
+			if tc.expectedPath != "" {
+				assert.Equal(t, tc.expectedPath, path, "Expected path mismatch")
+			}
 
 			// Check the error
 			if tc.expectedError == "" {
