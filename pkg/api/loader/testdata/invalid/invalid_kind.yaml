@@ -1,0 +1,4 @@
+apiVersion: kubeit.komailo.github.io/v1alpha1
+kind: UnknownKind
+metadata:
+  name: invalid-kind

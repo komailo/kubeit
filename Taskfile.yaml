@@ -22,8 +22,6 @@ tasks:
     desc: "Format Go code"
     cmds:
       - "$(go env GOPATH)/bin/golines --write-output ."
-      - "$(go env GOPATH)/bin/gofumpt -l -w ."
-      - go fmt
       - "$(go env GOPATH)/bin/golangci-lint run --fix"
 
   run:
@@ -63,10 +61,10 @@ tasks:
     deps:
       - go-tests
     cmds:
-      - build/kubeit generate manifest file://$(pwd)/examples/kubeit-helm/
-      - build/kubeit generate manifest ./examples/kubeit-helm-oci/
-      - build/kubeit generate manifest foo:latest
-      - build/kubeit generate manifest docker://foo:latest
+      - build/kubeit generate manifest file://$(pwd)/examples/kubeit-helm/ --kube-version 1.21.0
+      - build/kubeit generate manifest ./examples/kubeit-helm-oci/ --kube-version 1.21.0
+      - build/kubeit generate manifest foo:latest --kube-version 1.21.0
+      - build/kubeit generate manifest docker://foo:latest --kube-version 1.21.0
 
   go-tests:
     desc: "Run Go tests"

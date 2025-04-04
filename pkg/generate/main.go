@@ -45,7 +45,7 @@ func Manifests(generateSetOptions *Options) ([]error, map[string][]error) {
 
 func DockerLabels(
 	generateSetOptions *Options,
-) ([]error, map[string][]error) {
+) (string, []error, map[string][]error) {
 	sourceConfigURI := generateSetOptions.SourceConfigURI
 	logger.Infof("Generating Docker Labels from %s", sourceConfigURI)
 
@@ -53,11 +53,11 @@ func DockerLabels(
 	loaderErr := loaderInt.FromSourceURI(sourceConfigURI)
 
 	if len(loaderErr) != 0 {
-		return nil, loaderErr
+		return "", nil, loaderErr
 	}
 
 	if loaderInt.ResourceCount == 0 {
-		return []error{
+		return "", []error{
 			fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigURI),
 		}, nil
 	}
@@ -66,7 +66,7 @@ func DockerLabels(
 
 	marshalString, marshalErr := loaderInt.Marshal()
 	if marshalErr != nil {
-		return marshalErr, nil
+		return "", marshalErr, nil
 	}
 
 	// Base64-encode the YAML string
@@ -83,9 +83,7 @@ func DockerLabels(
 		labelArgs.WriteString(fmt.Sprintf("--label %s ", label))
 	}
 
-	fmt.Printf("%s", labelArgs.String())
-
-	return nil, nil
+	return labelArgs.String(), nil, nil
 }
 
 func CliDocs(rootCmd *cobra.Command, generateSetOptions *Options) error {

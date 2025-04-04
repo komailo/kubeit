@@ -1,0 +1,4 @@
+apiVersion: kubeit.komailo.github.io/v2alpha1
+kind: HelmApplication
+metadata:
+  name: invalid-version

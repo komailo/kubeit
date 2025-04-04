@@ -1,0 +1,23 @@
+---
+apiVersion: kubeit.komailo.github.io/v1alpha1
+kind: HelmApplication
+metadata:
+  name: valid-test-app
+spec:
+  chart:
+    repository: https://my-chart-repo.com
+    name: app-chart
+    version: ">=4.11.2"
+    releaseName: app-chart
+  values:
+    - type: mapping
+      data:
+        image.tag: $dockerImageTag
+        image.repository: $dockerImageRepository
+        kubeitVersion: $kubeitVersion
+    - type: raw
+      data:
+        global:
+          ingress:
+            enabled: false
+    - type: named
