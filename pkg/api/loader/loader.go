@@ -209,7 +209,7 @@ func (l *Loader) fromDockerImage() map[string][]error {
 		return errs
 	}
 
-	if exists, err := utils.CheckDockerImageExists(dockerClientInstance, imageRef); !exists ||
+	if exists, err := utils.CheckDockerImageExists(dockerClientInstance, imageRef, false); !exists ||
 		err != nil {
 		errs[imageRef] = append(errs[imageRef], fmt.Errorf("failed to find image: %w", err))
 		return errs

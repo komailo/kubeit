@@ -46,7 +46,7 @@ func uriIsDockerImgRef(uri string) (bool, string) {
 		return false, ""
 	}
 
-	if exists, err := CheckDockerImageExists(dockerClientInstance, ref.String()); exists &&
+	if exists, err := CheckDockerImageExists(dockerClientInstance, ref.String(), false); exists &&
 		err == nil {
 		logger.Debugf("URI %s matches Docker image pattern and exists", uri)
 		return true, ref.String()
@@ -78,6 +78,7 @@ func SourceConfigURIParser(uri string) (string, string, error) {
 			if err != nil {
 				return scheme, path, fmt.Errorf("unable to get absolute path for file %s", path)
 			}
+
 			fmt.Printf("File %s found so URI does look like a file", absPath)
 
 			return scheme, absPath, nil

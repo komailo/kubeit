@@ -78,5 +78,4 @@ func TestGenerateFromDockerImage(t *testing.T) {
 	if len(generateErrs) != 0 {
 		t.Errorf("Generate errors: %v", generateErrs)
 	}
-
 }
