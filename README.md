@@ -2,6 +2,8 @@
 
 ![Status](https://img.shields.io/badge/status-active%20development-orange)
 
+[![codecov](https://codecov.io/gh/komailo/kubeit/graph/badge.svg?token=71UQ7WUU2J)](https://codecov.io/gh/komailo/kubeit)
+
 > :warning: **Kubeit is in active development!**  
 > Expect rapid changes, breaking updates, and evolving features.
 

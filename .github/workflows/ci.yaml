@@ -1,6 +1,9 @@
 name: ci
 on:
   pull_request:
+  push:
+    branches:
+      - main
 
 permissions:
   # Required: allow read access to the content for analysis.

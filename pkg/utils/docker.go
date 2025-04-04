@@ -80,18 +80,20 @@ func (r *RealDockerClient) ImagePull(
 		switch {
 		case id != nil && progressDetail != nil:
 			// Display progress with ID and progress details
-			fmt.Printf("\r%s: %s %s", id, status, progressDetail)
+			fmt.Printf("\r\033[K%s: %s %s", id, status, progressDetail)
 		case id != nil:
 			// Display status with ID only
-			fmt.Printf("\r%s: %s", id, status)
+			fmt.Printf("\r\033[K%s: %s", id, status)
 		default:
 			// Display status only
-			fmt.Printf("\r%s", status)
+			fmt.Printf("\r\033[K%s", status)
 		}
 	}
 
-	// Print a newline after the progress is complete
-	fmt.Println()
+	// Empty out the line after the pull is complete
+	// This is to ensure the last line is cleared
+	// and doesn't leave any artifacts on the terminal
+	fmt.Printf("\r\033[K")
 
 	return nil
 }
