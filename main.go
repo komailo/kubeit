@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	kubeitCmd "github.com/komailo/kubeit/cmd/kubeit/commands"
+	reflowCmd "github.com/scorebet/reflow/cmd/reflow/commands"
 )
 
 func main() {
@@ -15,10 +15,10 @@ func main() {
 	binaryName := filepath.Base(os.Args[0])
 
 	switch binaryName {
-	case "kubeit":
-		command = kubeitCmd.NewCommand()
+	case "reflow":
+		command = reflowCmd.NewCommand()
 	default:
-		command = kubeitCmd.NewCommand()
+		command = reflowCmd.NewCommand()
 	}
 
 	if err := command.Execute(); err != nil {

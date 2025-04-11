@@ -2,9 +2,9 @@
 
 ![Status](https://img.shields.io/badge/status-active%20development-orange)
 
-[![codecov](https://codecov.io/gh/komailo/kubeit/graph/badge.svg?token=71UQ7WUU2J)](https://codecov.io/gh/komailo/kubeit)
+[![codecov](https://codecov.io/gh/scorebet/reflow/graph/badge.svg?token=71UQ7WUU2J)](https://codecov.io/gh/scorebet/reflow)
 
-> :warning: **Kubeit is in active development!**  
+> :warning: **Kubeit is in active development!**
 > Expect rapid changes, breaking updates, and evolving features.
 
 Kubeit is a deployment automation tool that simplifies Kubernetes configuration for service teams and platform engineers.
@@ -29,7 +29,7 @@ By embedding deployment configuration inside the container, Kubeit enables self-
 
 ---
 
-![Demo](docs/assets/kubeit-demo.gif)
+![Demo](docs/assets/reflow-demo.gif)
 
 ---
 
@@ -40,28 +40,28 @@ Try out the Kubeit configurations in the [examples](./examples/)
 1. Install Kubeit
 
    ```sh
-   go install github.com/komailo/kubeit
+   go install github.com/scorebet/reflow
    ```
 
 1. Generate the labels to attach to your Docker container
 
    ```sh
-   kubeit_docker_labels=$(kubeit generate docker-labels <kubeit-resources-dir>)
+   reflow_docker_labels=$(reflow generate docker-labels <reflow-resources-dir>)
    ```
 
 1. Build your Docker container and add the Kubeit labels
 
    ```sh
-   docker build $kubeit_docker_labels -t docker.io/<namespace>:<tag>
+   docker build $reflow_docker_labels -t docker.io/<namespace>:<tag>
    ```
 
 1. Generate the Kubernetes manifest based on the labels attached to the Docker container
 
    ```sh
-    kubeit generate manifest docker.io/<namespace>:<tag>
+    reflow generate manifest docker.io/<namespace>:<tag>
    ```
 
-1. The Kubernetes generated manifests are placed in `.kubeit/generated/manifests.yaml`
+1. The Kubernetes generated manifests are placed in `.reflow/generated/manifests.yaml`
 
 ---
 
@@ -89,4 +89,4 @@ Try out the Kubeit configurations in the [examples](./examples/)
 
 ## CLI Docs
 
-- [Kubeit CLI](./docs/cli/kubeit/kubeit.md)
+- [Kubeit CLI](./docs/cli/reflow/reflow.md)

@@ -10,7 +10,7 @@ import (
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 
-	"github.com/komailo/kubeit/internal/logger"
+	"github.com/scorebet/reflow/internal/logger"
 )
 
 // DockerClientInterface defines the methods required for a Docker client

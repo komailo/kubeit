@@ -1,4 +1,4 @@
-module github.com/komailo/kubeit
+module github.com/scorebet/reflow
 
 go 1.23.4
 

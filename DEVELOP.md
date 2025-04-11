@@ -9,7 +9,7 @@ KubeIt uses [Task](https://taskfile.dev/) as the task runner for build automatio
 You can install Task by following the instructions [here](https://taskfile.dev/installation/) or by doing:
 
 ```sh
-sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b ~/.local/bin
+brew install go-task/tap/go-task && brew install go-task
 ```
 
 ### Setting up the environment

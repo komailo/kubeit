@@ -1,20 +1,20 @@
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
-project_name: kubeit
+project_name: reflow
 
 before:
   hooks:
     - go mod tidy
 
 builds:
-  - id: kubeit-cli
+  - id: reflow-cli
     main: ./main.go
-    binary: kubeit-{{ .Os }}-{{ .Arch }}
+    binary: reflow-{{ .Os }}-{{ .Arch }}
     ldflags:
-      - "-X github.com/komailo/kubeit/internal/version.buildDate={{ .Date }}"
-      - "-X github.com/komailo/kubeit/internal/version.gitCommit={{ .FullCommit }}"
-      - "-X github.com/komailo/kubeit/internal/version.gitSummary={{ .Summary }}"
-      - "-X github.com/komailo/kubeit/internal/version.gitTreeState={{ .GitTreeState }}"
-      - "-X github.com/komailo/kubeit/internal/version.version={{ .Version }}"
+      - "-X github.com/scorebet/reflow/internal/version.buildDate={{ .Date }}"
+      - "-X github.com/scorebet/reflow/internal/version.gitCommit={{ .FullCommit }}"
+      - "-X github.com/scorebet/reflow/internal/version.gitSummary={{ .Summary }}"
+      - "-X github.com/scorebet/reflow/internal/version.gitTreeState={{ .GitTreeState }}"
+      - "-X github.com/scorebet/reflow/internal/version.version={{ .Version }}"
       #- "-s -w"
     goos:
       - linux
@@ -24,9 +24,9 @@ builds:
       - arm64
 
 archives:
-  - id: kubeit-archive
+  - id: reflow-archive
     builds:
-      - kubeit-cli
+      - reflow-cli
     name_template: |-
       {{ .ProjectName }}-{{ .Os }}-{{ .Arch }}
     format: binary

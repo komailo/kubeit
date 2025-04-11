@@ -14,7 +14,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/yaml"
 
-	"github.com/komailo/kubeit/pkg/utils"
+	"github.com/scorebet/reflow/pkg/utils"
 )
 
 func TestLoader_FromSourceURI(t *testing.T) {
@@ -47,7 +47,7 @@ func TestLoader_FromSourceURI(t *testing.T) {
 				},
 				"testdata/invalid/invalid_version.yaml": {
 					errors.New(
-						"unknown version kubeit.komailo.github.io/v2alpha1 for kind HelmApplication",
+						"unknown version reflow.scorebet.github.io/v2alpha1 for kind HelmApplication",
 					),
 				},
 				"testdata/invalid/invalid_helm_application.yaml": {

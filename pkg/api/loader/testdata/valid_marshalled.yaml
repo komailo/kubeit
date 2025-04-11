@@ -3,7 +3,7 @@ SourceMeta:
   Scheme: ""
   Source: ""
   SourceURI: ""
-apiVersion: kubeit.komailo.github.io/v1alpha1
+apiVersion: reflow.scorebet.github.io/v1alpha1
 kind: HelmApplication
 metadata:
   name: valid-test-app
@@ -17,7 +17,7 @@ spec:
     - data:
         image.repository: $dockerImageRepository
         image.tag: $dockerImageTag
-        kubeitVersion: $kubeitVersion
+        reflowVersion: $reflowVersion
       type: mapping
     - data:
         global:
@@ -30,7 +30,7 @@ SourceMeta:
   Scheme: ""
   Source: ""
   SourceURI: ""
-apiVersion: kubeit.komailo.github.io/v1alpha1
+apiVersion: reflow.scorebet.github.io/v1alpha1
 kind: NamedValues
 metadata:
   name: staging
@@ -44,7 +44,7 @@ SourceMeta:
   Scheme: ""
   Source: ""
   SourceURI: ""
-apiVersion: kubeit.komailo.github.io/v1alpha1
+apiVersion: reflow.scorebet.github.io/v1alpha1
 kind: NamedValues
 metadata:
   name: production
@@ -58,7 +58,7 @@ SourceMeta:
   Scheme: ""
   Source: ""
   SourceURI: ""
-apiVersion: kubeit.komailo.github.io/v1alpha1
+apiVersion: reflow.scorebet.github.io/v1alpha1
 kind: NamedValues
 metadata:
   name: canary

@@ -55,7 +55,7 @@ linters-settings:
   gocritic:
     disabled-checks: []
   goimports:
-    local-prefixes: github.com/komailo/kubeit
+    local-prefixes: github.com/scorebet/reflow
   gomodguard:
     blocked:
       modules:
@@ -68,15 +68,15 @@ linters-settings:
               - errors
   importas:
     alias:
-      - pkg: "github.com/komailo/kubeit/pkg/apis/application/v1alpha1"
+      - pkg: "github.com/scorebet/reflow/pkg/apis/application/v1alpha1"
         alias: "appv1alpha1"
-      - pkg: "github.com/komailo/kubeit/pkg/apis/helm_application/v1alpha1"
+      - pkg: "github.com/scorebet/reflow/pkg/apis/helm_application/v1alpha1"
         alias: "helmappv1alpha1"
-      - pkg: "github.com/komailo/kubeit/pkg/apis/helm_values/v1alpha1"
+      - pkg: "github.com/scorebet/reflow/pkg/apis/helm_values/v1alpha1"
         alias: "helmvaluesv1alpha1"
-      - pkg: "github.com/komailo/kubeit/pkg/apis/named_values/v1alpha1"
+      - pkg: "github.com/scorebet/reflow/pkg/apis/named_values/v1alpha1"
         alias: "namedvaluesv1alpha1"
-      - pkg: "github.com/komailo/kubeit/pkg/apis/meta/v1alpha1"
+      - pkg: "github.com/scorebet/reflow/pkg/apis/meta/v1alpha1"
         alias: "metav1alpha1"
       - pkg: "github.com/moby/moby"
         alias: "docker"

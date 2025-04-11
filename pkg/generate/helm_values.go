@@ -10,12 +10,12 @@ import (
 	"gopkg.in/yaml.v3"
 	helmCliValues "helm.sh/helm/v3/pkg/cli/values"
 
-	"github.com/komailo/kubeit/internal/logger"
-	"github.com/komailo/kubeit/internal/version"
-	"github.com/komailo/kubeit/pkg/api/loader"
-	v1 "github.com/komailo/kubeit/pkg/api/v1"
+	"github.com/scorebet/reflow/internal/logger"
+	"github.com/scorebet/reflow/internal/version"
+	"github.com/scorebet/reflow/pkg/api/loader"
+	v1 "github.com/scorebet/reflow/pkg/api/v1"
 
-	"github.com/komailo/kubeit/pkg/utils"
+	"github.com/scorebet/reflow/pkg/utils"
 )
 
 func generateHelmValues(
@@ -176,7 +176,7 @@ func generateValueMappings(
 				return dockerRepo
 			case "dockerImageTag":
 				return dockerTag
-			case "kubeitVersion":
+			case "reflowVersion":
 				return version.GetBuildInfo().Version
 			}
 			// If not found, return the original match unchanged

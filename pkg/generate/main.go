@@ -10,10 +10,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 
-	"github.com/komailo/kubeit/common"
-	"github.com/komailo/kubeit/internal/logger"
-	"github.com/komailo/kubeit/internal/version"
-	"github.com/komailo/kubeit/pkg/api/loader"
+	"github.com/scorebet/reflow/common"
+	"github.com/scorebet/reflow/internal/logger"
+	"github.com/scorebet/reflow/internal/version"
+	"github.com/scorebet/reflow/pkg/api/loader"
 )
 
 func Manifests(generateSetOptions *Options) ([]error, map[string][]error) {
@@ -29,7 +29,7 @@ func Manifests(generateSetOptions *Options) ([]error, map[string][]error) {
 
 	if loaderInt.ResourceCount == 0 {
 		return []error{
-			fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigURI),
+			fmt.Errorf("no %s resources found when traversing: %s", common.AppName, sourceConfigURI),
 		}, nil
 	}
 
@@ -58,7 +58,7 @@ func DockerLabels(
 
 	if loaderInt.ResourceCount == 0 {
 		return "", []error{
-			fmt.Errorf("no Kubeit resources found when traversing: %s", sourceConfigURI),
+			fmt.Errorf("no %s resources found when traversing: %s", common.AppName, sourceConfigURI),
 		}, nil
 	}
 
@@ -74,8 +74,8 @@ func DockerLabels(
 
 	// Generate the docker build command with multiple labels
 	labels := []string{
-		fmt.Sprintf("%s/version=%s", common.KubeitDomain, version.GetBuildInfo().Version),
-		fmt.Sprintf("%s/resources=%s", common.KubeitDomain, encodedResources),
+		fmt.Sprintf("%s/version=%s", common.ServiceDomain, version.GetBuildInfo().Version),
+		fmt.Sprintf("%s/resources=%s", common.ServiceDomain, encodedResources),
 	}
 
 	var labelArgs strings.Builder
@@ -87,7 +87,7 @@ func DockerLabels(
 }
 
 func CliDocs(rootCmd *cobra.Command, generateSetOptions *Options) error {
-	docsDir := filepath.Join(generateSetOptions.OutputDir, "cli", common.KubeitCLIName)
+	docsDir := filepath.Join(generateSetOptions.OutputDir, "cli", common.MainCLIName)
 	if err := os.MkdirAll(docsDir, 0o755); err != nil {
 		return fmt.Errorf("failed to create docs directory: %w", err)
 	}

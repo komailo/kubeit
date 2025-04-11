@@ -2,7 +2,7 @@ version: "3"
 
 tasks:
   setup:
-    desc: "Setup the project"
+    desc: "Setup the local environment project development"
     cmds:
       - go mod download
       - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
@@ -14,9 +14,8 @@ tasks:
     desc: "Build the Go project"
     deps:
       - go-mod-tidy
-      # - go-releaser-local
     cmds:
-      - go build -o build/kubeit .
+      - go build -o build/reflow .
 
   fmt:
     desc: "Format Go code"
@@ -25,9 +24,9 @@ tasks:
       - "$(go env GOPATH)/bin/golangci-lint run --fix"
 
   run:
-    desc: "Run the KubeIt CLI with arguments"
+    desc: "Run the Main CLI with arguments"
     cmds:
-      - build/kubeit {{.CLI_ARGS}}
+      - build/reflow {{.CLI_ARGS}}
     deps:
       - build
 
@@ -42,16 +41,16 @@ tasks:
       - generate-cli-docs
 
   generate-schema:
-    desc: Generate the schema for Kubeit configuration
+    desc: Generate the schema for apis
     cmds:
-      - build/kubeit generate-schema
+      - build/reflow generate-schema
     deps:
       - build
 
   generate-cli-docs:
-    desc: Generate the CLI documentation for Kubeit
+    desc: Generate the CLI documentation for tool
     cmds:
-      - build/kubeit generate --output-dir ./docs cli-docs
+      - build/reflow generate --output-dir ./docs cli-docs
     deps:
       - build
 
@@ -61,10 +60,10 @@ tasks:
     deps:
       - go-tests
     cmds:
-      - build/kubeit generate manifest file://$(pwd)/examples/kubeit-helm/ --kube-version 1.21.0
-      - build/kubeit generate manifest ./examples/kubeit-helm-oci/ --kube-version 1.21.0
-      - build/kubeit generate manifest foo:latest --kube-version 1.21.0
-      - build/kubeit generate manifest docker://foo:latest --kube-version 1.21.0
+      - build/reflow generate manifest file://$(pwd)/examples/reflow-helm/ --kube-version 1.21.0
+      - build/reflow generate manifest ./examples/reflow-helm-oci/ --kube-version 1.21.0
+      - build/reflow generate manifest foo:latest --kube-version 1.21.0
+      - build/reflow generate manifest docker://foo:latest --kube-version 1.21.0
 
   go-tests:
     desc: "Run Go tests"
@@ -77,9 +76,9 @@ tasks:
   int-test:
     desc: "Run integration test"
     cmds:
-      - docker build $(task run -- generate docker-labels ./examples/kubeit-helm) -t foo ./examples
-      - task run -- generate manifest file://$(pwd)/examples/kubeit-helm/
-      - task run -- generate manifest ./examples/kubeit-helm-oci/
+      - docker build $(task run -- generate docker-labels ./examples/reflow-helm) -t foo ./examples
+      - task run -- generate manifest file://$(pwd)/examples/reflow-helm/
+      - task run -- generate manifest ./examples/reflow-helm-oci/
       - task run -- generate manifest foo:latest
       - task run -- generate manifest docker://foo:latest
 

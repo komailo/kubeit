@@ -1,7 +1,7 @@
 package v1
 
 import (
-	"github.com/komailo/kubeit/pkg/api"
+	"github.com/scorebet/reflow/pkg/api"
 )
 
 type NamedValues struct {

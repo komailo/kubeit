@@ -1,7 +1,13 @@
 package common
 
-const (
-	APIVersionV1Alpha1 = "kubeit.komailo.github.io/v1alpha1"
-	KubeitCLIName      = "kubeit"
-	KubeitDomain       = "kubeit.komail.io"
+import (
+	"strings"
 )
+
+const (
+	APIVersionV1Alpha1 = "reflow.thescore.is"
+	AppName            = "Reflow"
+	ServiceDomain      = "re.thescore.is"
+)
+
+var MainCLIName = strings.ToLower(AppName)

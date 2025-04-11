@@ -15,11 +15,11 @@ import (
 
 	"github.com/docker/docker/client"
 
-	"github.com/komailo/kubeit/common"
-	"github.com/komailo/kubeit/internal/logger"
-	"github.com/komailo/kubeit/pkg/api"
-	v1 "github.com/komailo/kubeit/pkg/api/v1"
-	"github.com/komailo/kubeit/pkg/utils"
+	"github.com/scorebet/reflow/common"
+	"github.com/scorebet/reflow/internal/logger"
+	"github.com/scorebet/reflow/pkg/api"
+	v1 "github.com/scorebet/reflow/pkg/api/v1"
+	"github.com/scorebet/reflow/pkg/utils"
 )
 
 // Loader handles the decoding of YAML/JSON documents into API objects
@@ -50,14 +50,14 @@ func NewLoader() *Loader {
 	register(
 		l,
 		"HelmApplication",
-		"kubeit.komailo.github.io/v1alpha1",
+		"reflow.scorebet.github.io/v1alpha1",
 		func() *v1.HelmApplication { return &v1.HelmApplication{} },
 		&l.HelmApplications,
 	)
 	register(
 		l,
 		"NamedValues",
-		"kubeit.komailo.github.io/v1alpha1",
+		"reflow.scorebet.github.io/v1alpha1",
 		func() *v1.NamedValues { return &v1.NamedValues{} },
 		&l.NamedValues,
 	)
@@ -161,11 +161,11 @@ func (l *Loader) fromDir() map[string][]error {
 		if info.IsDir() {
 			if strings.HasPrefix(info.Name(), ".") &&
 				filepath.Dir(filePath) == filepath.Clean(dirPath) {
-				logger.Debugf("Skiping root directory to load Kubeit resources from: %s", filePath)
+				logger.Debugf("Skiping root directory to load %s resources from: %s", common.AppName, filePath)
 				return filepath.SkipDir
 			}
 
-			logger.Debugf("Found directory to walk to Kubeit resources from: %s", filePath)
+			logger.Debugf("Found directory to walk to %s resources from: %s", common.AppName, filePath)
 
 			return nil
 		}
@@ -235,13 +235,13 @@ func (l *Loader) fromDockerImage() map[string][]error {
 		return errs
 	}
 
-	labelKey := common.KubeitDomain + "/resources"
+	labelKey := common.ServiceDomain + "/resources"
 
 	base64Resource, ok := imageInspect.Config.Labels[labelKey]
 	if !ok {
 		errs[imageRef] = append(
 			errs[imageRef],
-			fmt.Errorf("no Kubeit resources found in image: %s", imageRef),
+			fmt.Errorf("no %s resources found in image: %s", common.AppName, imageRef),
 		)
 
 		return errs
@@ -306,7 +306,7 @@ func (l *Loader) LogResources() {
 			logger.Infof("%s: %d", kind, count)
 		}
 
-		logger.Infof("Found %d Kubeit resources", resourceCount)
+		logger.Infof("Found %d %s resources", resourceCount, common.AppName)
 	}
 }
 
@@ -334,7 +334,7 @@ func (l *Loader) Marshal() (strings.Builder, []error) {
 }
 
 func (l *Loader) FromSourceURI(sourceConfigURI string) map[string][]error {
-	logger.Infof("Loading Kubeit resources from %s", sourceConfigURI)
+	logger.Infof("Loading %s resources from %s", common.AppName, sourceConfigURI)
 
 	errs := make(map[string][]error)
 

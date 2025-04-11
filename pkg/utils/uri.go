@@ -8,7 +8,7 @@ import (
 
 	"github.com/distribution/reference"
 
-	"github.com/komailo/kubeit/internal/logger"
+	"github.com/scorebet/reflow/internal/logger"
 )
 
 func uriIsFile(uri string) (bool, string) {

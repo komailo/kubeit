@@ -3,7 +3,7 @@ package v1
 import (
 	"errors"
 
-	"github.com/komailo/kubeit/pkg/api"
+	"github.com/scorebet/reflow/pkg/api"
 )
 
 // HelmApplication represents a Helm-based application deployment

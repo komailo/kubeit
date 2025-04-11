@@ -1,6 +1,6 @@
 package generate
 
-import "github.com/komailo/kubeit/common"
+import "github.com/scorebet/reflow/common"
 
 type Options struct {
 	OutputDir       string
@@ -28,9 +28,9 @@ type stringMap map[string]string
 
 func (c *CommonK8sAnnotations) GenerateAnnotations() map[string]string {
 	return map[string]string{
-		common.KubeitDomain + "/app-name":     c.AppName,
-		common.KubeitDomain + "/app-type":     c.AppType,
-		common.KubeitDomain + "/generated-by": c.GeneratedBy,
+		common.ServiceDomain + "/app-name":     c.AppName,
+		common.ServiceDomain + "/app-type":     c.AppType,
+		common.ServiceDomain + "/generated-by": c.GeneratedBy,
 	}
 }
 

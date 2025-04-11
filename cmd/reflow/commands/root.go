@@ -1,8 +1,10 @@
 package commands
 
 import (
-	"github.com/komailo/kubeit/common"
-	"github.com/komailo/kubeit/internal/logger"
+	"fmt"
+
+	"github.com/scorebet/reflow/common"
+	"github.com/scorebet/reflow/internal/logger"
 
 	"github.com/spf13/cobra"
 )
@@ -12,16 +14,16 @@ var globalSetOpts globalOptions
 
 // RootCmd is the base command
 var RootCmd = &cobra.Command{
-	Use:   common.KubeitCLIName,
+	Use:   common.MainCLIName,
 	Short: "CLI tool to generate and manage Kubernetes deployment configurations",
-	Long: `Kubeit is a CLI tool designed for service teams to simplify 
-the generation and management of Kubernetes deployment configurations. 
+	Long: fmt.Sprintf(`%s is a CLI tool designed for service teams to simplify
+the generation and management of Kubernetes deployment configurations.
 
-It allows teams to define infrastructure in a minimal YAML format 
+It allows teams to define infrastructure in a minimal YAML format
 and transforms it into fully rendered Kubernetes objects.
 
-Use 'kubeit generate' to convert a KubeIt configuration into 
-Kubernetes manifests for deployment.`,
+Use 'reflow generate' to convert a %s configuration into
+Kubernetes manifests for deployment.`, common.AppName, common.AppName),
 }
 
 func init() {

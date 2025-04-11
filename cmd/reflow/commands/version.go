@@ -7,8 +7,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/komailo/kubeit/internal/logger"
-	"github.com/komailo/kubeit/internal/version"
+	"github.com/scorebet/reflow/common"
+	"github.com/scorebet/reflow/internal/logger"
+	"github.com/scorebet/reflow/internal/version"
 )
 
 //go:embed assets/LICENSE
@@ -30,7 +31,7 @@ var depNames = map[string]string{
 // VersionCmd provides the version of the tool
 var VersionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Print the version of Kubeit",
+	Short: "Print the version of " + common.AppName,
 	Run: func(_ *cobra.Command, _ []string) {
 		if showLicense {
 			fmt.Println(licenseContent)
@@ -55,7 +56,7 @@ var VersionCmd = &cobra.Command{
 		fmt.Printf("\n")
 
 		if !showLicense {
-			fmt.Printf("For license information, run: kubeit version --%s\n", licenseFlag)
+			fmt.Printf("For license information, run: reflow version --%s\n", licenseFlag)
 		}
 	},
 }

@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/komailo/kubeit/pkg/generate"
+	"github.com/scorebet/reflow/pkg/generate"
 )
 
 // genDocsCmd represents the command to generate CLI documentation

@@ -12,10 +12,10 @@ import (
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/registry"
 
-	"github.com/komailo/kubeit/pkg/api/loader"
+	"github.com/scorebet/reflow/pkg/api/loader"
 
-	"github.com/komailo/kubeit/internal/logger"
-	v1 "github.com/komailo/kubeit/pkg/api/v1"
+	"github.com/scorebet/reflow/internal/logger"
+	v1 "github.com/scorebet/reflow/pkg/api/v1"
 )
 
 func ManifestsFromHelm(
@@ -301,9 +301,9 @@ func pullHelmChart(
 // 	var labels CommonK8sLabels
 
 // 	annotations := CommonK8sAnnotations{
-// 		AppName:     "kubeit",
+// 		AppName:     "reflow",
 // 		AppType:     "v0.1.0",
-// 		GeneratedBy: "kubeit",
+// 		GeneratedBy: "reflow",
 // 	}
 
 // 	return labels, annotations

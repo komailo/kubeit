@@ -1,5 +1,5 @@
 ---
-apiVersion: kubeit.komailo.github.io/v1alpha1
+apiVersion: reflow.scorebet.github.io/v1alpha1
 kind: HelmApplication
 metadata:
   name: valid-test-app
@@ -8,13 +8,13 @@ spec:
     repository: https://bjw-s.github.io/helm-charts/
     name: app-template
     version: ">=3.7.3"
-    releaseName: kubeit-example-app
+    releaseName: reflow-example-app
   values:
     - type: mapping
       data:
         controller.image.tag: $dockerImageTag
         controller.image.repository: $dockerImageRepository
-        kubeitVersion: $kubeitVersion
+        reflowVersion: $reflowVersion
     - type: raw
       data:
         defaultPodOptions:

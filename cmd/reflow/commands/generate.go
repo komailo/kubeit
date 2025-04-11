@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/komailo/kubeit/internal/logger"
-	"github.com/komailo/kubeit/pkg/generate"
+	"github.com/scorebet/reflow/internal/logger"
+	"github.com/scorebet/reflow/pkg/generate"
 )
 
 type contextKey string
@@ -71,7 +71,7 @@ func init() {
 		&generateSetOptions.OutputDir,
 		"output-dir",
 		"o",
-		"./.kubeit/.generated",
+		"./.reflow/.generated",
 		"Output directory where the generated artifacts will be stored.",
 	)
 
@@ -79,7 +79,7 @@ func init() {
 		&generateSetOptions.WorkDir,
 		"work-dir",
 		"w",
-		"./.kubeit/.workdir",
+		"./.reflow/.workdir",
 		"Working directory where temporary artifacts and results will be stored.",
 	)
 

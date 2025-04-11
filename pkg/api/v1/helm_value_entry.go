@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/komailo/kubeit/common"
-	"github.com/komailo/kubeit/pkg/api"
-	"github.com/komailo/kubeit/pkg/utils"
+	"github.com/scorebet/reflow/common"
+	"github.com/scorebet/reflow/pkg/api"
+	"github.com/scorebet/reflow/pkg/utils"
 )
 
 const (

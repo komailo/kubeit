@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/komailo/kubeit/pkg/generate"
+	"github.com/scorebet/reflow/pkg/generate"
 )
 
 func buildDockerImage(dockerContext string, imageName string, labelArgs string) error {
@@ -39,7 +39,7 @@ func buildDockerImage(dockerContext string, imageName string, labelArgs string) 
 
 func TestGenerateFromDockerImage(t *testing.T) {
 	generateSetOptions := generate.Options{
-		SourceConfigURI: "file://./testdata/kubeit-valid",
+		SourceConfigURI: "file://./testdata/reflow-valid",
 	}
 	labelArgs, generateErrs, loadFileErrs := generate.DockerLabels(
 		&generateSetOptions,

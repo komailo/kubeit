@@ -7,13 +7,14 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/komailo/kubeit/internal/logger"
-	"github.com/komailo/kubeit/pkg/generate"
+	"github.com/scorebet/reflow/common"
+	"github.com/scorebet/reflow/internal/logger"
+	"github.com/scorebet/reflow/pkg/generate"
 )
 
 var GenerateDockerLabelsCmd = &cobra.Command{
 	Use:   "docker-labels [source-config-uri]",
-	Short: "Generate Docker labels from a Kubeit configuration",
+	Short: fmt.Sprintf("Generate Docker labels from a %s configuration", common.AppName),
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		generateSetOptions.SourceConfigURI = args[0]

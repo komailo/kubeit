@@ -3,14 +3,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: kubeit-example-app-code
+  name: reflow-example-app-code
   labels:
-    app.kubernetes.io/instance: kubeit-example-app
+    app.kubernetes.io/instance: reflow-example-app
     app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: kubeit-example-app
-    app.kubernetes.io/service: kubeit-example-app-code
+    app.kubernetes.io/name: reflow-example-app
+    app.kubernetes.io/service: reflow-example-app-code
     helm.sh/chart: app-template-3.7.3
-  namespace: 
+  namespace:
 spec:
   type: ClusterIP
   ports:
@@ -20,21 +20,21 @@ spec:
       name: http
   selector:
     app.kubernetes.io/component: main
-    app.kubernetes.io/instance: kubeit-example-app
-    app.kubernetes.io/name: kubeit-example-app
+    app.kubernetes.io/instance: reflow-example-app
+    app.kubernetes.io/name: reflow-example-app
 ---
 # Source: app-template/templates/common.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: kubeit-example-app-main
+  name: reflow-example-app-main
   labels:
-    app.kubernetes.io/instance: kubeit-example-app
+    app.kubernetes.io/instance: reflow-example-app
     app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: kubeit-example-app
-    app.kubernetes.io/service: kubeit-example-app-main
+    app.kubernetes.io/name: reflow-example-app
+    app.kubernetes.io/service: reflow-example-app-main
     helm.sh/chart: app-template-3.7.3
-  namespace: 
+  namespace:
 spec:
   type: ClusterIP
   ports:
@@ -44,47 +44,47 @@ spec:
       name: http
   selector:
     app.kubernetes.io/component: main
-    app.kubernetes.io/instance: kubeit-example-app
-    app.kubernetes.io/name: kubeit-example-app
+    app.kubernetes.io/instance: reflow-example-app
+    app.kubernetes.io/name: reflow-example-app
 ---
 # Source: app-template/templates/common.yaml
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: kubeit-example-app
+  name: reflow-example-app
   labels:
     app.kubernetes.io/component: main
-    app.kubernetes.io/instance: kubeit-example-app
+    app.kubernetes.io/instance: reflow-example-app
     app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: kubeit-example-app
+    app.kubernetes.io/name: reflow-example-app
     helm.sh/chart: app-template-3.7.3
   annotations:
     reloader.stakater.com/auto: "true"
-  namespace: 
+  namespace:
 spec:
   revisionHistoryLimit: 3
-  replicas: 
+  replicas:
   podManagementPolicy: OrderedReady
   updateStrategy:
     type: RollingUpdate
   selector:
     matchLabels:
       app.kubernetes.io/component: main
-      app.kubernetes.io/name: kubeit-example-app
-      app.kubernetes.io/instance: kubeit-example-app
-  serviceName: kubeit-example-app
+      app.kubernetes.io/name: reflow-example-app
+      app.kubernetes.io/instance: reflow-example-app
+  serviceName: reflow-example-app
   template:
     metadata:
-      labels: 
+      labels:
         app.kubernetes.io/component: main
-        app.kubernetes.io/instance: kubeit-example-app
-        app.kubernetes.io/name: kubeit-example-app
-    spec: 
+        app.kubernetes.io/instance: reflow-example-app
+        app.kubernetes.io/name: reflow-example-app
+    spec:
       enableServiceLinks: false
       serviceAccountName: default
       automountServiceAccountToken: false
-      securityContext: 
+      securityContext:
         fsGroup: 568
         fsGroupChangePolicy: OnRootMismatch
         runAsGroup: 568
@@ -93,32 +93,32 @@ spec:
       hostNetwork: false
       hostPID: false
       dnsPolicy: ClusterFirst
-      containers: 
+      containers:
         - image: ghcr.io/onedr0p/home-assistant:2023.11.2
           name: main
           volumeMounts:
-          - mountPath: /config/backups
-            name: backup
-          - mountPath: /config
-            name: config
+            - mountPath: /config/backups
+              name: backup
+            - mountPath: /config
+              name: config
         - args:
-          - --auth
-          - none
-          - --user-data-dir
-          - /config/.vscode
-          - --extensions-dir
-          - /config/.vscode
-          - --port
-          - "8081"
-          - /config
+            - --auth
+            - none
+            - --user-data-dir
+            - /config/.vscode
+            - --extensions-dir
+            - /config/.vscode
+            - --port
+            - "8081"
+            - /config
           image: ghcr.io/coder/code-server:4.19.0
           name: code
           volumeMounts:
-          - mountPath: /config/backups
-            name: backup
-          - mountPath: /config
-            name: config
-      volumes: 
+            - mountPath: /config/backups
+              name: backup
+            - mountPath: /config
+              name: config
+      volumes:
         - name: backup
           nfs:
             path: /volume/Backups/k8s/hass
@@ -131,13 +131,13 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: kubeit-example-app-code
+  name: reflow-example-app-code
   labels:
-    app.kubernetes.io/instance: kubeit-example-app
+    app.kubernetes.io/instance: reflow-example-app
     app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: kubeit-example-app
+    app.kubernetes.io/name: reflow-example-app
     helm.sh/chart: app-template-3.7.3
-  namespace: 
+  namespace:
 spec:
   ingressClassName: internal-nginx
   tls:
@@ -151,7 +151,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: kubeit-example-app-code
+                name: reflow-example-app-code
                 port:
                   number: 8081
 ---
@@ -159,13 +159,13 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: kubeit-example-app-main
+  name: reflow-example-app-main
   labels:
-    app.kubernetes.io/instance: kubeit-example-app
+    app.kubernetes.io/instance: reflow-example-app
     app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: kubeit-example-app
+    app.kubernetes.io/name: reflow-example-app
     helm.sh/chart: app-template-3.7.3
-  namespace: 
+  namespace:
 spec:
   ingressClassName: external-nginx
   tls:
@@ -179,6 +179,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: kubeit-example-app-main
+                name: reflow-example-app-main
                 port:
                   number: 8123

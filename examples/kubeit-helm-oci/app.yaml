@@ -1,5 +1,5 @@
 ---
-apiVersion: kubeit.komailo.github.io/v1alpha1
+apiVersion: reflow.scorebet.github.io/v1alpha1
 kind: HelmApplication
 metadata:
   name: app
