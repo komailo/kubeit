@@ -1,15 +1,15 @@
 name: Publish Release
-on:
-  push:
-    tags:
-      - "v*"
+# on:
+#   push:
+#     tags:
+#       - "v*"
 
 jobs:
   goreleaser:
     permissions:
       contents: write
     if: github.repository == 'scorebet/reflow'
-    runs-on: ubuntu-latest
+    runs-on: internal-github-action-light
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
 
