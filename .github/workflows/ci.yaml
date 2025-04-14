@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   validate-go-mod-tidy:
-    runs-on: internal-github-action-light
+    runs-on: internal-github-action-runner
     steps:
       - name: Checkout Repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -34,7 +34,7 @@ jobs:
           fi
 
   go-tests:
-    runs-on: internal-github-action-light
+    runs-on: internal-github-action-runner
     steps:
       - name: Checkout Repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
