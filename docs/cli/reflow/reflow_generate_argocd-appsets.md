@@ -1,19 +1,19 @@
-## reflow generate cli-docs
+## reflow generate argocd-appsets
 
-Generate CLI documentation
+Generate ArgoCD Application Sets
 
 ### Synopsis
 
-Generates markdown documentation for the CLI commands.
+Generates the ArgoCD Application Sets from the Reflow resources of kind ArgoAppSet
 
 ```
-reflow generate cli-docs [flags]
+reflow generate argocd-appsets [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for cli-docs
+  -h, --help   help for argocd-appsets
 ```
 
 ### Options inherited from parent commands

@@ -2,6 +2,7 @@ package generate
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -29,7 +30,11 @@ func Manifests(generateSetOptions *Options) ([]error, map[string][]error) {
 
 	if loaderInt.ResourceCount == 0 {
 		return []error{
-			fmt.Errorf("no %s resources found when traversing: %s", common.AppName, sourceConfigURI),
+			fmt.Errorf(
+				"no %s resources found when traversing: %s",
+				common.AppName,
+				sourceConfigURI,
+			),
 		}, nil
 	}
 
@@ -58,7 +63,11 @@ func DockerLabels(
 
 	if loaderInt.ResourceCount == 0 {
 		return "", []error{
-			fmt.Errorf("no %s resources found when traversing: %s", common.AppName, sourceConfigURI),
+			fmt.Errorf(
+				"no %s resources found when traversing: %s",
+				common.AppName,
+				sourceConfigURI,
+			),
 		}, nil
 	}
 
@@ -103,4 +112,106 @@ func CliDocs(rootCmd *cobra.Command, generateSetOptions *Options) error {
 }
 
 func Schemas() {
+}
+
+func ArgoAppSets(generateSetOptions *Options) ([]error, map[string][]error) {
+	sourceConfigURI := generateSetOptions.SourceConfigURI
+	logger.Infof("Generating ArgoCD Application Sets from %s", sourceConfigURI)
+
+	loaderInt := loader.NewLoader()
+	loaderErr := loaderInt.FromSourceURI(sourceConfigURI)
+
+	if len(loaderErr) != 0 {
+		return nil, loaderErr
+	}
+
+	if loaderInt.ResourceCount == 0 {
+		return []error{
+			fmt.Errorf(
+				"no %s resources found when traversing: %s",
+				common.AppName,
+				sourceConfigURI,
+			),
+		}, nil
+	}
+
+	loaderInt.LogResources()
+
+	var generateErrors []error
+
+	argoAppSetResource := loaderInt.ServiceApps
+
+	if len(argoAppSetResource) == 0 {
+		return []error{errors.New("no ArgoAppSet resources found")}, nil
+	}
+
+	for _, argoAppSet := range argoAppSetResource {
+		service := loader.FindResourcesByName(
+			loaderInt.Services,
+			[]string{argoAppSet.Spec.ServiceName},
+		)
+		if len(service) == 0 {
+			generateErrors = append(
+				generateErrors,
+				fmt.Errorf(
+					"unable to find service %s spec referenced in ServiceApp %s",
+					argoAppSet.Spec.ServiceName,
+					argoAppSet.Metadata.Name,
+				),
+			)
+
+			continue
+		}
+
+		// clean up the dir
+		globPattern := filepath.Join(generateSetOptions.OutputDir,
+			service[0].Spec.Org,
+			"appset",
+			"*",
+			argoAppSet.Metadata.Name)
+
+		matches, err := filepath.Glob(globPattern)
+		if err != nil {
+			generateErrors = append(
+				generateErrors,
+				fmt.Errorf("Failed to find directories matching %s: %w", globPattern, err),
+			)
+
+			continue
+		}
+
+		for _, dir := range matches {
+			err := os.RemoveAll(dir)
+			if err != nil {
+				generateErrors = append(
+					generateErrors,
+					fmt.Errorf("failed to delete directory %s: %w", dir, err),
+				)
+			}
+		}
+
+		// we exit the loop if we have an error as no point generating when cleanup fails
+		if len(generateErrors) > 0 {
+			generateErrors = append(
+				generateErrors,
+				fmt.Errorf(
+					"due to cleanup errors, skipping generation of %s",
+					argoAppSet.Metadata.Name,
+				),
+			)
+
+			continue
+		}
+
+		err = ArgoAppSet(
+			*argoAppSet,
+			*service[0],
+			generateSetOptions,
+		)
+		if err != nil {
+			generateErrors = append(generateErrors, err)
+		}
+	}
+
+	return generateErrors, nil
 }

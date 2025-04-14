@@ -9,17 +9,18 @@ type Object interface {
 	GetObjectMeta() ObjectMeta
 	GetTypeMeta() k8smetav1.TypeMeta
 	GetSourceMeta() SourceMeta
+	SetSourceMeta(source SourceMeta)
 	Validate() error
 }
 
 // ObjectMeta contains metadata about the object
 type ObjectMeta struct {
-	Name string `json:"name"`
+	Name string `json:"name" validate:"required"`
 }
 
 // BaseObject is the base type that all resource types must embed
 type BaseObject struct {
-	k8smetav1.TypeMeta `json:",inline"`
+	k8smetav1.TypeMeta `           json:",inline"`
 	Metadata           ObjectMeta `json:"metadata"`
 	SourceMeta         SourceMeta
 	Spec               any `json:"spec,omitempty"`
@@ -48,4 +49,8 @@ func (r BaseObject) GetSourceMeta() SourceMeta {
 
 func (r BaseObject) Validate() error {
 	return nil
+}
+
+func (r *BaseObject) SetSourceMeta(source SourceMeta) {
+	r.SourceMeta = source
 }

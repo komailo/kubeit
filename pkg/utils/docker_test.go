@@ -104,11 +104,11 @@ func TestRealDockerClient_ImagePull(t *testing.T) {
 	require.NoError(t, err, "Expected no error when creating Docker client")
 
 	// Pull a valid image
-	err = client.ImagePull(context.Background(), "nginx:latest")
+	err = client.ImagePull(t.Context(), "nginx:latest")
 	require.NoError(t, err, "Expected no error for pulling a valid image")
 
 	// Pull an invalid image
-	err = client.ImagePull(context.Background(), "nonexistent-image:latest")
+	err = client.ImagePull(t.Context(), "nonexistent-image:latest")
 	require.Error(t, err, "Expected an error for pulling a nonexistent image")
 	assert.Contains(
 		t,

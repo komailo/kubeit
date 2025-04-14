@@ -1,0 +1,11 @@
+---
+apiVersion: reflow.thescore.is/v1alpha1
+kind: Service
+metadata:
+  name: jarvis
+spec:
+  organization: infra
+  sourceRepository: scoremedia/jarvis
+  environments:
+    - internal-services
+    - production

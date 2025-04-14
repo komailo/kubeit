@@ -1,0 +1,11 @@
+---
+apiVersion: reflow.thescore.is/v1alpha1
+kind: ServiceApplication
+metadata:
+  name: app
+spec:
+  serviceName: jarvis
+  clusterRole: internal-services
+  valuesRepository: https://github.com/scoremedia/jarvis-manifests
+  chartName: jarvis
+  chartVersion: 3.13.0-31.8c1c7e4

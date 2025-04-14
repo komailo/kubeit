@@ -5,14 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/scorebet/reflow/common"
 	"github.com/scorebet/reflow/pkg/api"
 	"github.com/scorebet/reflow/pkg/utils"
-)
-
-const (
-	GroupVersion = common.APIVersionV1Alpha1
-	Kind         = "HelmValues"
 )
 
 var ValidValueTypes = []string{

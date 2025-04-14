@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,6 +15,8 @@ import (
 	k8syaml "sigs.k8s.io/yaml"
 
 	"github.com/docker/docker/client"
+
+	"github.com/go-playground/validator/v10"
 
 	"github.com/scorebet/reflow/common"
 	"github.com/scorebet/reflow/internal/logger"
@@ -29,6 +32,8 @@ type Loader struct {
 	SourceMeta       api.SourceMeta
 	HelmApplications []*v1.HelmApplication
 	NamedValues      []*v1.NamedValues
+	Services         []*v1.Service
+	ServiceApps      []*v1.ServiceApp
 	KindsCount       map[string]int
 	ResourceCount    int
 }
@@ -50,16 +55,32 @@ func NewLoader() *Loader {
 	register(
 		l,
 		"HelmApplication",
-		"reflow.scorebet.github.io/v1alpha1",
+		common.APIVersionV1Alpha1,
 		func() *v1.HelmApplication { return &v1.HelmApplication{} },
 		&l.HelmApplications,
 	)
 	register(
 		l,
 		"NamedValues",
-		"reflow.scorebet.github.io/v1alpha1",
+		common.APIVersionV1Alpha1,
 		func() *v1.NamedValues { return &v1.NamedValues{} },
 		&l.NamedValues,
+	)
+
+	register(
+		l,
+		"Service",
+		common.APIVersionV1Alpha1,
+		func() *v1.Service { return &v1.Service{} },
+		&l.Services,
+	)
+
+	register(
+		l,
+		"ServiceApplication",
+		common.APIVersionV1Alpha1,
+		func() *v1.ServiceApp { return &v1.ServiceApp{} },
+		&l.ServiceApps,
 	)
 
 	return l
@@ -96,7 +117,7 @@ type TypeMeta struct {
 	APIVersion string `json:"apiVersion" yaml:"apiVersion"`
 }
 
-func (l *Loader) unmarshal(data []byte) error {
+func (l *Loader) unmarshal(data []byte, sourceMeta api.SourceMeta) error {
 	var meta TypeMeta
 	if err := yaml.Unmarshal(data, &meta); err != nil {
 		return fmt.Errorf("failed to decode type metadata: %w", err)
@@ -113,9 +134,11 @@ func (l *Loader) unmarshal(data []byte) error {
 	}
 
 	obj := rt.New()
-	if err := yaml.Unmarshal(data, obj); err != nil {
+	if err := yaml.UnmarshalStrict(data, obj); err != nil {
 		return fmt.Errorf("failed to unmarshal %s: %w", meta.Kind, err)
 	}
+
+	obj.SetSourceMeta(sourceMeta)
 
 	rt.AppendFn(obj)
 
@@ -126,7 +149,7 @@ func (l *Loader) unmarshal(data []byte) error {
 }
 
 // UnmarshalMulti decodes a YAML file into the appropriate API object
-func (l *Loader) unmarshalMulti(data []byte) []error {
+func (l *Loader) unmarshalMulti(data []byte, sourceMeta api.SourceMeta) []error {
 	var errors []error
 
 	decoder := yaml.NewYAMLOrJSONDecoder(bytes.NewReader(data), 4096)
@@ -137,7 +160,7 @@ func (l *Loader) unmarshalMulti(data []byte) []error {
 			break // End of input
 		}
 
-		unmarshalErr := l.unmarshal(rawMessage)
+		unmarshalErr := l.unmarshal(rawMessage, sourceMeta)
 		if unmarshalErr != nil {
 			errors = append(errors, unmarshalErr)
 			continue
@@ -161,11 +184,40 @@ func (l *Loader) fromDir() map[string][]error {
 		if info.IsDir() {
 			if strings.HasPrefix(info.Name(), ".") &&
 				filepath.Dir(filePath) == filepath.Clean(dirPath) {
-				logger.Debugf("Skiping root directory to load %s resources from: %s", common.AppName, filePath)
+				logger.Debugf(
+					"Skiping root directory to load %s resources from: %s",
+					common.AppName,
+					filePath,
+				)
+
 				return filepath.SkipDir
 			}
 
-			logger.Debugf("Found directory to walk to %s resources from: %s", common.AppName, filePath)
+			logger.Debugf(
+				"Found directory to walk to %s resources from: %s",
+				common.AppName,
+				filePath,
+			)
+
+			return nil
+		}
+
+		if strings.HasPrefix(info.Name(), ".") {
+			logger.Debugf(
+				"Skiping hidden file: %s",
+				filePath,
+			)
+
+			return nil
+		}
+
+		if !strings.HasSuffix(info.Name(), ".yaml") &&
+			!strings.HasSuffix(info.Name(), ".yml") &&
+			!strings.HasSuffix(info.Name(), ".json") {
+			logger.Debugf(
+				"Skiping file as not a valid extension: %s",
+				filePath,
+			)
 
 			return nil
 		}
@@ -178,7 +230,13 @@ func (l *Loader) fromDir() map[string][]error {
 			return nil
 		}
 
-		unmarhsalErr := l.unmarshalMulti(data)
+		sourceMeta := api.SourceMeta{
+			Scheme:    l.SourceMeta.Scheme,
+			SourceURI: l.SourceMeta.SourceURI,
+			Source:    filePath,
+		}
+
+		unmarhsalErr := l.unmarshalMulti(data, sourceMeta)
 		if unmarhsalErr != nil {
 			errs[filePath] = append(errs[filePath], unmarhsalErr...)
 		}
@@ -259,7 +317,13 @@ func (l *Loader) fromDockerImage() map[string][]error {
 
 	logger.Debugf("Decoded resources:\n%s", decodedResources)
 
-	unmarhsalErr := l.unmarshalMulti(decodedResources)
+	sourceMeta := api.SourceMeta{
+		Scheme:    l.SourceMeta.Scheme,
+		SourceURI: l.SourceMeta.SourceURI,
+		Source:    l.SourceMeta.SourceURI,
+	}
+
+	unmarhsalErr := l.unmarshalMulti(decodedResources, sourceMeta)
 	if unmarhsalErr != nil {
 		errs[imageRef] = append(errs[imageRef], unmarhsalErr...)
 	}
@@ -369,13 +433,104 @@ func (l *Loader) FromSourceURI(sourceConfigURI string) map[string][]error {
 }
 
 func (l *Loader) Validate() map[string][]error {
-	// uniqueness check
+	validationErrors := make(map[string][]error) // Initialize the map
+
+	// Uniqueness check
 	uniquenessErrors := l.checkResourceUniqueness()
 	if len(uniquenessErrors) != 0 {
-		return uniquenessErrors
+		for key, errs := range uniquenessErrors {
+			validationErrors[key] = append(validationErrors[key], errs...)
+		}
+	}
+
+	// Validation check for each resource
+	for _, versions := range l.registry {
+		for _, kind := range versions {
+			for _, resource := range kind.GetAll() {
+				if serviceApp, ok := resource.(*v1.ServiceApp); ok {
+					jsonBytes, err := json.MarshalIndent(serviceApp, "", "  ")
+					if err != nil {
+						logger.Debugf("Failed to marshal ServiceApp: %v\n", err)
+					} else {
+						logger.Debugf("ServiceApp:\n%s\n", string(jsonBytes))
+					}
+				}
+
+				kindName := kind.GetKind()
+
+				validate := validator.New(validator.WithRequiredStructEnabled())
+
+				// struct validation
+				err := validate.Struct(resource)
+				if err != nil {
+					// this check is only needed when your code could produce
+					// an invalid value for validation such as interface with nil
+					// value most including myself do not usually have code like this.
+					var invalidValidationError *validator.InvalidValidationError
+					if errors.As(err, &invalidValidationError) {
+						validationErrors[resource.GetSourceMeta().Source] = append(
+							validationErrors[resource.GetSourceMeta().Source],
+							fmt.Errorf(
+								"invalid validation error %w", err,
+							),
+						)
+					}
+
+					var validateErrs validator.ValidationErrors
+					if errors.As(err, &validateErrs) {
+						for _, e := range validateErrs {
+							validationErrors[resource.GetSourceMeta().Source] = append(
+								validationErrors[resource.GetSourceMeta().Source],
+								fmt.Errorf(
+									"validation failed on kind %s for field '%s': %s",
+									kindName,
+									e.Namespace(),
+									e.Tag(),
+								),
+							)
+						}
+					}
+				}
+
+				// API resource implemented validation
+				if err := resource.Validate(); err != nil {
+					name := resource.GetObjectMeta().Name
+					validationErrors[resource.GetSourceMeta().Source] = append(
+						validationErrors[resource.GetSourceMeta().Source],
+						fmt.Errorf(
+							"Resource of kind %s with name %s has errors: %w",
+							kindName,
+							name,
+							err,
+						),
+					)
+				}
+			}
+		}
+	}
+
+	if len(validationErrors) != 0 {
+		return validationErrors
 	}
 
 	return nil
+}
+
+func MarshalToYaml[T any](resource any) ([]byte, error) {
+	jsonBytes, err := json.Marshal(resource)
+	if err != nil {
+		return nil, fmt.Errorf("error marshalling while marshalling resource to yaml: %w", err)
+	}
+
+	yamlBytes, err := k8syaml.JSONToYAML(jsonBytes)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"error doing json to yaml while marshalling resource to yaml: %w",
+			err,
+		)
+	}
+
+	return yamlBytes, nil
 }
 
 func marshalResourceToYAML(resource api.Object) (string, error) {

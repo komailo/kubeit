@@ -69,7 +69,7 @@ func TestResourceValidate(t *testing.T) {
 }
 
 func TestResource_ImplementsObjectInterface(t *testing.T) {
-	resource := BaseObject{}
+	resource := &BaseObject{}
 
 	var obj Object = resource // This will fail to compile if Resource does not implement Object
 

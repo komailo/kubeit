@@ -5,9 +5,10 @@ import (
 )
 
 const (
-	APIVersionV1Alpha1 = "reflow.thescore.is"
-	AppName            = "Reflow"
-	ServiceDomain      = "re.thescore.is"
+	AppName       = "Reflow"
+	ServiceDomain = "reflow.thescore.is"
 )
 
 var MainCLIName = strings.ToLower(AppName)
+
+var APIVersionV1Alpha1 = ServiceDomain + "/" + "v1alpha1"
