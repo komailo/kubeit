@@ -1,11 +1,15 @@
-name: ci
+name: CI Workflow
 on:
+  merge_group:
+    branches:
+      - main
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.merged && github.base_ref || github.head_ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   # Required: allow read access to the content for analysis.
@@ -66,3 +70,29 @@ jobs:
           fi
         env:
           MINIMUM_COVERAGE: 6.7 # Set your minimum coverage threshold here
+
+  docker:
+    name: "Docker"
+    uses: scorebet/github-workflows/.github/workflows/docker-ci-workflow.yml@main
+    secrets: inherit
+    with:
+      image-name: "reflow"
+
+  # The ci-final-status job allows to combine all required status check into one.
+  # The ruleset will enforce that ci-final-status check passes before the PR is allowed to be merged.
+  # THE JOBID AND NAME, ci-final-status, MUST NOT CHANGE. IT WILL IMPACT STATUS CHECK ENFORCEMENT
+  ci-final-status:
+    name: "ci-final-status"
+    needs:
+      # Add all job IDs here that should be considered
+      # This ensures final-status passes only if all `needs` jobs succeed
+      - docker
+      - go-tests
+      - validate-go-mod-tidy
+    runs-on: internal-github-action-runner-light
+    if: always() # Ensures this job runs even if one of the needs is skipped or fails
+    steps:
+      - name: Check workflow status
+        uses: scorebet/check-workflow-status-action@main
+        with:
+          jobs: ${{ toJSON(needs) }}
