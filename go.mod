@@ -5,15 +5,15 @@ go 1.23.4
 require (
 	github.com/containerd/errdefs v1.0.0
 	github.com/distribution/reference v0.6.0
-	github.com/docker/docker v28.1.1+incompatible
+	github.com/docker/docker v28.3.0+incompatible
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
 	gopkg.in/yaml.v3 v3.0.1
 	gotest.tools/v3 v3.5.2
-	helm.sh/helm/v3 v3.17.3
-	k8s.io/apimachinery v0.32.4
-	sigs.k8s.io/yaml v1.4.0
+	helm.sh/helm/v3 v3.18.3
+	k8s.io/apimachinery v0.33.2
+	sigs.k8s.io/yaml v1.5.0
 )
 
 require (
